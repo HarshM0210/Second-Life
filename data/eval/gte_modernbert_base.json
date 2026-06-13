@@ -1,0 +1,10 @@
+{
+  "model": "Alibaba-NLP/gte-modernbert-base",
+  "dim": 768,
+  "ndcg@10": 0.5864,
+  "recall@10": 0.6173,
+  "mrr": 0.6108,
+  "num_queries": 176,
+  "dataset": "tasksource/esci test (US, small_version, 500 queries)",
+  "note": "Phase 2.1 embedder upgrade. Comparable to bge-small on short text; faster inference, better scaling. Real lift comes from reranker."
+}

@@ -43,33 +43,40 @@ def rerank(
     cards: dict[str, HealthCard],
     base_reasons: dict[str, list[str]] | None = None,
     k: int | None = None,
+    market_state: "MarketState | None" = None,
 ) -> Feed:
-    """Apply Renewed/Health-Score boosting on top of retrieval similarity.
+    """Apply Renewed/Health-Score boosting + market-aware policy on top of retrieval.
 
     Args:
         user_id: who this feed is for.
         retrieved: [(sku_id, similarity)] from retrieve().
         cards: {sku_id: HealthCard} for badge/boost. Missing card => treated New.
-        base_reasons: optional {sku_id: [reason]} from the matcher (e.g.
-            "matches wishlist"); merged into the item's reasons.
+        base_reasons: optional {sku_id: [reason]} from the matcher.
         k: optional cap on feed length.
+        market_state: optional MarketState for policy adjustment.
 
     Returns:
         Feed with items sorted by final score desc, sku_id asc for ties.
     """
+    from .policy import MarketState, policy_adjustment
+
     base_reasons = base_reasons or {}
+    if market_state is None:
+        market_state = MarketState()
     items: list[FeedItem] = []
 
     for sku_id, sim in retrieved:
         card = cards.get(sku_id)
         boost, boost_reasons = _renewed_boost(card) if card else (0.0, [])
-        reasons = list(base_reasons.get(sku_id, [])) + boost_reasons
+        is_renewed = card.is_renewed if card else False
+        pol_adj, pol_reasons = policy_adjustment(market_state, is_renewed)
+        reasons = list(base_reasons.get(sku_id, [])) + boost_reasons + pol_reasons
         items.append(
             FeedItem(
                 sku_id=sku_id,
-                rank=0,  # assigned after sort
-                score=sim + boost,
-                badge="Renewed" if (card and card.is_renewed) else "New",
+                rank=0,
+                score=sim + boost + pol_adj,
+                badge="Renewed" if is_renewed else "New",
                 health_score=card.health_score if card else 0.0,
                 reasons=reasons,
             )

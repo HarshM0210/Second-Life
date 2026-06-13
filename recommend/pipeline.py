@@ -1,6 +1,6 @@
 """End-to-end wiring: user context + catalog -> ranked Feed.
 
-Composes: profile -> embed -> retrieve -> rerank
+Composes: profile -> embed -> retrieve -> [cross-encoder rerank] -> business rerank
 Catalog item vectors precomputed once at init.
 """
 from __future__ import annotations
@@ -15,10 +15,12 @@ from .schemas import Feed, HealthCard, UserContext
 class Recommender:
     """Holds the precomputed catalog so per-request work is just embed+retrieve+rerank."""
 
-    def __init__(self, sku_text: dict[str, str], cards: dict[str, HealthCard]):
+    def __init__(self, sku_text: dict[str, str], cards: dict[str, HealthCard],
+                 use_cross_encoder: bool = False):
         self.sku_text = sku_text
         self.cards = cards
         self.item_vecs = embed_catalog(sku_text)  # precompute once
+        self.use_cross_encoder = use_cross_encoder
 
     def _build_reasons(self, user: UserContext, retrieved: list[tuple[str, float]]) -> dict[str, list[str]]:
         """Generate per-item reason strings from user context signals."""
@@ -54,5 +56,14 @@ class Recommender:
         profile = assemble_profile_text(user, self.sku_text, self.cards)
         user_vec = embed_text(profile)
         retrieved = retrieve(user_vec, self.item_vecs, k=None)
+
+        # Optional two-stage: cross-encoder re-scores top candidates
+        if self.use_cross_encoder and retrieved:
+            from .cross_encoder import cross_encoder_rerank
+            retrieved = cross_encoder_rerank(
+                query=profile, candidates=retrieved,
+                texts=self.sku_text, top_n=min(20, len(retrieved)),
+            )
+
         base_reasons = self._build_reasons(user, retrieved)
         return rerank(user.user_id, retrieved, self.cards, base_reasons, k=k)

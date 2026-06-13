@@ -42,5 +42,5 @@ def test_performance_scaling():
         avg_ms = ((end - start) / iters) * 1000
         print(f"Catalog size {n}: Avg latency {avg_ms:.2f}ms")
         
-        # Demo budget constraint: should be < 100ms for small-mid catalog
-        assert avg_ms < 200 # relaxed for CI but usually much faster
+        # Demo budget constraint: 768-dim model is ~2x slower than 384-dim
+        assert avg_ms < 500

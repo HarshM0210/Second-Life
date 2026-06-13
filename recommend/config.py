@@ -19,9 +19,9 @@ class RerankConfig:
 
 @dataclass(frozen=True)
 class EmbedConfig:
-    text_model: str = "BAAI/bge-small-en-v1.5"  # local; downloaded once, no API
-    image_model: str = "ViT-B/32"               # CLIP, optional
-    dim: int = 384                              # bge-small-en-v1.5 dimension
+    text_model: str = "Alibaba-NLP/gte-modernbert-base"  # 2025 model; local, no API
+    image_model: str = "ViT-B/32"                        # CLIP, optional
+    dim: int = 768                                       # gte-modernbert-base dimension
 
 
 RERANK = RerankConfig()

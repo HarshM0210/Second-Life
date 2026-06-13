@@ -67,9 +67,9 @@ GOLDEN_SNAPSHOT = {
         {"sku_id": "SKU-COFFEE-PRESS", "rank": 3, "badge": "New"},
     ],
     "u-coldstart": [
-        {"sku_id": "SKU-BABYMON-1R", "rank": 1, "badge": "Renewed"},
-        {"sku_id": "SKU-NIKE-RUN-8R", "rank": 2, "badge": "Renewed"},
-        {"sku_id": "SKU-BABYMON-1",  "rank": 3, "badge": "New"},
+        {"sku_id": "SKU-NIKE-RUN-8R",   "rank": 1, "badge": "Renewed"},
+        {"sku_id": "SKU-BABYMON-1R",    "rank": 2, "badge": "Renewed"},
+        {"sku_id": "SKU-HEADPHONE-NCR", "rank": 3, "badge": "Renewed"},
     ],
     "u-seller": [
         {"sku_id": "SKU-COFFEE-PRESS", "rank": 1, "badge": "New"},

@@ -1,0 +1,10 @@
+{
+  "model": "BAAI/bge-small-en-v1.5",
+  "dim": 384,
+  "ndcg@10": 0.5948,
+  "recall@10": 0.6199,
+  "mrr": 0.616,
+  "num_queries": 176,
+  "dataset": "tasksource/esci test (US, small_version, 500 queries)",
+  "note": "Phase 2.1 baseline - measure all upgrades against this"
+}

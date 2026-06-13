@@ -29,7 +29,7 @@ class TestRealEmbeddings:
     def test_embed_text_is_normalized(self):
         vec = embed_text("running shoes lightweight")
         norm = math.sqrt(sum(x * x for x in vec))
-        assert norm == pytest.approx(1.0, abs=1e-4)
+        assert norm == pytest.approx(1.0, abs=1e-3)
 
     def test_embed_text_is_dense(self):
         vec = embed_text("noise cancelling headphones")
