@@ -1,19 +1,19 @@
 """FastAPI surface for Module 2 — one endpoint: GET /recommend?user_id=
 
-Slots into the shared backend service per README. Loads fixtures at startup as
-the demo catalog; swap for the real catalog/Health-Card source when upstream
-(Module 1) is wired in.
+Loads catalog and Health Cards from a configurable source (env vars) with
+fixture fallback for offline/demo mode.
 
 Run locally:  uvicorn recommend.service:app --reload
 """
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 try:
     from fastapi import FastAPI, HTTPException
-except ImportError:  # FastAPI is optional for unit tests; the pipeline works without it.
+except ImportError:
     FastAPI = None  # type: ignore
 
 from .pipeline import Recommender
@@ -22,16 +22,24 @@ from .schemas import HealthCard, UserContext
 FIXTURES = Path(__file__).resolve().parent.parent / "fixtures"
 
 
-def load_recommender(fixtures_dir: Path = FIXTURES) -> Recommender:
-    catalog = json.loads((fixtures_dir / "catalog.json").read_text())
-    cards_raw = json.loads((fixtures_dir / "health_cards.json").read_text())
+def _load_json(env_key: str, fixture_name: str) -> list[dict]:
+    """Load from env-specified path if set, else fall back to fixtures."""
+    path = os.environ.get(env_key)
+    if path and Path(path).exists():
+        return json.loads(Path(path).read_text())
+    return json.loads((FIXTURES / fixture_name).read_text())
+
+
+def load_recommender() -> Recommender:
+    catalog = _load_json("RECOMMEND_CATALOG", "catalog.json")
+    cards_raw = _load_json("RECOMMEND_HEALTH_CARDS", "health_cards.json")
     sku_text = {item["sku_id"]: item["text"] for item in catalog}
     cards = {c["sku_id"]: HealthCard.from_dict(c) for c in cards_raw}
     return Recommender(sku_text, cards)
 
 
-def load_users(fixtures_dir: Path = FIXTURES) -> dict[str, UserContext]:
-    users_raw = json.loads((fixtures_dir / "users.json").read_text())
+def load_users() -> dict[str, UserContext]:
+    users_raw = _load_json("RECOMMEND_USERS", "users.json")
     return {u["user_id"]: UserContext.from_dict(u) for u in users_raw}
 
 
