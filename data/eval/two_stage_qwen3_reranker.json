@@ -1,11 +1,13 @@
 {
+  "ndcg@10": 0.4655659686218106,
+  "recall@10": 0.49673753665689147,
+  "mrr": 0.4934776790667735,
+  "num_queries": 120,
+  "avg_candidates": 56.108333333333334,
   "model": "Alibaba-NLP/gte-modernbert-base + Qwen/Qwen3-Reranker-0.6B",
-  "pipeline": "embed -> retrieve -> cross-encoder rerank -> business rerank",
-  "ndcg@10": 0.5855,
-  "recall@10": 0.6177,
-  "mrr": 0.6059,
-  "num_queries": 176,
-  "dataset": "tasksource/esci test (US, small_version, 500 queries)",
-  "note": "ESCI subset has avg 2.7 candidates/query \u2014 too few for CE to differentiate. CE value is on larger candidate pools (demo catalog: 8 items, real: 100s). Model verified working: 2.19 relevant vs -10.4 irrelevant on direct pairs.",
-  "latency_per_query_ms": 45
+  "pipeline": "embed -> retrieve -> cross-encoder rerank top-20 -> business rerank",
+  "num_negatives": 50,
+  "rerank_top_n": 20,
+  "dataset": "tasksource/esci test (US, small_version, 500q) + 50 pooled negatives/query (120-query cap for CE cost)",
+  "retrieval_only_ndcg": 0.4659623861177506
 }

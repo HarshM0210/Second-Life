@@ -13,6 +13,9 @@ env/
 *.safetensors
 *.bin
 
+# Regenerable ESCI dataset cache (re-downloads via esci_loader). Keep data/eval/* (results).
+data/esci/
+
 # Work-defining process docs — internal team coordination, not committed/pushed
 AGENTS.md
 TASKS.md

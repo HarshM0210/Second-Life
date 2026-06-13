@@ -24,13 +24,22 @@ catalog text ─▶ embedder.embed_catalog (precomputed once) ─▶ retrieve.re
 
 | | |
 |---|---|
-| **Model** | `BAAI/bge-small-en-v1.5` (`config.EmbedConfig.text_model`) |
-| **Dimension** | `384` (`EmbedConfig.dim`) |
+| **Model** | `Alibaba-NLP/gte-modernbert-base` (`config.EmbedConfig.text_model`) — Phase 2.1 upgrade from `bge-small-en-v1.5` |
+| **Dimension** | `768` (`EmbedConfig.dim`) |
 | **Normalization** | L2 / unit vectors — `normalize_embeddings=True` |
 | **Batch size** | `64` (`embed_texts`, catalog precompute) |
-| **Runtime** | sentence-transformers, CPU-fine, lazy-loaded once, cached to `~/.cache/huggingface` |
+| **Runtime** | sentence-transformers (`trust_remote_code`), CPU-fine, lazy-loaded once, cached to `~/.cache/huggingface` |
 | **Where** | `recommend/embedder.py` |
-| **Status** | **Current/implemented.** Slated for upgrade to **EmbeddingGemma** (Google, Sep 2025) in Phase 2.1 — see §10 (TASKS U3). |
+| **Eval (real ESCI, 50 pooled negatives/query)** | **NDCG@10 = 0.4660** vs bge-small 0.4634 — a *marginal* win (§10). |
+| **Status** | **Current/implemented.** |
+
+> **Phase 2.1 honesty note.** The embedder was upgraded `bge-small` (384-dim, 2023)
+> → `gte-modernbert-base` (768-dim, ModernBERT arch, early 2025). On the *valid*
+> ESCI eval (proper candidate pools) it wins by only **+0.0026 NDCG@10** while being
+> ~2× the size and latency — so **`bge-small` remains a legitimate lighter fallback**
+> (nearly equal, half the footprint). The originally-assigned **EmbeddingGemma**
+> (Sep 2025) was not used — it is license-gated on HF; `gte-modernbert` was the
+> ungated 2025-era stand-in. The solidly-2025 component is the Qwen3-Reranker (§10).
 
 **Why this model.**
 - **Small + CPU-friendly.** ~130 MB, 384-dim. Runs sub-second on CPU at demo scale, so the live demo has **no GPU dependency** — directly serves the "edge-deployable, no per-call cost" architecture story.
@@ -39,7 +48,7 @@ catalog text ─▶ embedder.embed_catalog (precomputed once) ─▶ retrieve.re
 - **L2-normalized** so cosine similarity reduces to a dot product, and scores live in a clean, comparable `[-1, 1]` range that the re-ranker's additive boosts are tuned against.
 
 **Why these parameter values.**
-- `dim=384` is fixed by the model; it's recorded in config so the hash-fallback produces matching-length vectors and tests can assert shape.
+- `dim=768` is fixed by the model (was 384 under bge-small); recorded in config so the hash-fallback produces matching-length vectors and tests can assert shape.
 - `batch_size=64` — catalog embedding is a one-time startup cost; 64 is a safe throughput/memory midpoint for CPU. Not latency-critical (precomputed, not per-request).
 - `normalize_embeddings=True` is essential: the re-rank weights (§5) assume similarities on the normalized cosine scale.
 
@@ -255,7 +264,12 @@ jump from "competent recommender" to the project's differentiating thesis.
 
 ---
 
-## 10. Upgrade plan (Phase 2.1 — committed)
+## 10. Upgrade plan (Phase 2.1 — as originally scoped)
+
+> **Superseded by §11 (actual results).** This section is the *plan* as written.
+> What shipped differs: the embedder is `gte-modernbert-base` (not EmbeddingGemma —
+> license-gated), and the measured outcome is a *marginal* embedder win with a *flat*
+> reranker on ESCI, not the lift this plan assumed. See §11 for what actually happened.
 
 The model documented above is a hand-tuned additive score over `bge-small` cosine
 on a synthetic catalog. It demos well but only "performs" on synthetic data, and
@@ -315,17 +329,33 @@ Measured offline: **NDCG@10 / Recall@10 / MRR** on Amazon ESCI subset (500 queri
 
 ### Eval results
 
+Two eval setups were run. The **first was methodologically invalid** (kept for the
+record); the **second is the one to trust.**
+
+**Valid eval — 50 pooled negatives/query (avg 55 candidates), reproducible via
+`python -m scripts.run_eval`:**
+
 | Stage | Model | NDCG@10 | Recall@10 | MRR | Notes |
 |-------|-------|---------|-----------|-----|-------|
-| Baseline | `BAAI/bge-small-en-v1.5` (384-dim) | **0.5948** | 0.6199 | 0.6160 | Phase 1 model (2023) |
-| Embedder upgrade | `Alibaba-NLP/gte-modernbert-base` (768-dim) | **0.5864** | 0.6173 | 0.6108 | 2025 model. Comparable on short text; 2.4× faster inference |
-| + Qwen3-Reranker | gte-modernbert + `Qwen/Qwen3-Reranker-0.6B` | **0.5855** | 0.6177 | 0.6059 | Flat on tiny candidate sets (avg 2.7/query). CE verified working on direct pairs (2.19 vs -10.4) |
+| Baseline | `BAAI/bge-small-en-v1.5` (384-dim) | 0.4634 | **0.5275** | 0.4899 | Phase 1 model (2023) |
+| Embedder upgrade | `Alibaba-NLP/gte-modernbert-base` (768-dim) | **0.4660** | 0.5220 | **0.4938** | 2025 model. **Marginal win: +0.0026 NDCG** at ~2× size/latency |
+| + Qwen3-Reranker | gte-modernbert + `Qwen/Qwen3-Reranker-0.6B` | 0.4656 | 0.4967 | 0.4935 | **Flat** vs retrieval-only 0.4660 — reranker adds nothing here (120-query subset) |
 
-**Why the numbers are flat:** The ESCI subset has only 2.7 products per query on
-average — barely any room for a reranker to reorder. Cross-encoders shine on larger
-candidate pools (50–200). On our 8-item demo catalog, the CE correctly confirms the
-embedder's ordering. On a real catalog (1k+ items), the two-stage pipeline will
-outperform single-stage retrieval.
+**Invalid first run — raw ESCI, ~2.7 candidates/query (do not cite):** all three
+configs scored ~0.59 because NDCG@10 over ~3 items is near-trivial — there was
+nothing to differentiate. This is *why* the negative-pooling fix was needed.
+
+**Honest read of the valid numbers:**
+- The embedder upgrade is a **real but marginal win** (+0.0026 NDCG@10). It does not
+  justify the ~2× footprint on accuracy alone — `bge-small` is a legitimate lighter
+  fallback. The case for `gte-modernbert` is "2025 model + slightly better," not a
+  step change.
+- The **cross-encoder is flat even with proper candidate pools** (0.4656 vs 0.4660).
+  The model is verified working on direct pairs (2.19 vs −10.4 logits), so this is a
+  genuine finding, not a bug: on short product-title ranking, dense retrieval is
+  already strong and the CE doesn't beat it. It is therefore **off by default**
+  (`use_cross_encoder=False`) and kept as opt-in for noisier/larger catalogs where it
+  may help — a claim we have *not* yet proven and should not assert on stage.
 
 ### Market-aware policy (demo moment)
 
@@ -342,15 +372,16 @@ in the score breakdown. Rule-based; LinUCB bandit is future work.
 
 | Component | Model | Released | Size | Why |
 |---|---|---|---|---|
-| Embedder | `Alibaba-NLP/gte-modernbert-base` | 2025 | ~150 MB | ModernBERT backbone, strong MTEB, fast CPU, no auth needed |
+| Embedder | `Alibaba-NLP/gte-modernbert-base` | 2025 | ~600 MB | ModernBERT backbone, strong MTEB, fast CPU, no auth needed |
 | Reranker | `Qwen/Qwen3-Reranker-0.6B` | Jun 2025 | ~1.2 GB | Top-tier cross-encoder, sentence-transformers native, CPU-runnable |
 | Future embedder | `google/embeddinggemma-300m` | Sep 2025 | ~600 MB | Gated (needs HF auth). Superior on-device story, 100+ languages. Swap when auth is available. |
 
 ### Data
 
-- **ESCI subset:** 500 queries, 1332 judgments, cached to `data/esci/esci_subset.json` (275 KB)
+- **ESCI subset:** 500 queries, 1332 judgments. Cached to `data/esci/esci_subset.json`
+  — **gitignored (regenerable)**; re-downloads via `esci_loader` / `scripts.run_eval`.
 - **Synthetic fixtures:** 8 SKUs, 4 personas — unchanged, used as offline fallback
-- **Eval results:** stored in `data/eval/*.json`
+- **Eval results:** stored in `data/eval/*.json` (tracked — the evidence)
 
 ### Test coverage
 
