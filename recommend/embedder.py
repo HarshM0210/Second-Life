@@ -6,9 +6,12 @@ L2-normalized (unit vectors) so cosine similarity == dot product.
 from __future__ import annotations
 
 import hashlib
+import logging
 from typing import Optional
 
 from .config import EMBED
+
+logger = logging.getLogger(__name__)
 
 _model = None
 
@@ -20,6 +23,30 @@ def _get_model():
         from sentence_transformers import SentenceTransformer
         _model = SentenceTransformer(EMBED.text_model)
     return _model
+
+
+def is_model_loaded() -> bool:
+    """Return True if the real model is currently in memory."""
+    return _model is not None
+
+
+def validate_embedder():
+    """R8: Force a model load and verify it's producing dense vectors.
+    
+    Raises:
+        RuntimeError: if the model fails to load or produces sparse hash-like output.
+    """
+    try:
+        # Force load
+        _get_model()
+        # Verify output on a sample
+        vec = embed_text("verification sentence", use_model=True)
+        non_zero = sum(1 for x in vec if abs(x) > 1e-6)
+        if non_zero < EMBED.dim * 0.5:
+            raise RuntimeError(f"Embedder produced sparse output ({non_zero}/{EMBED.dim}). Possible silent hash fallback.")
+    except Exception as e:
+        logger.error(f"Embedder validation failed: {e}")
+        raise RuntimeError(f"Critical: Recommendation model failed to load correctly: {e}")
 
 
 def _hash_embed(text: str, dim: int) -> list[float]:
@@ -40,16 +67,20 @@ def embed_text(text: str, use_model: Optional[bool] = None) -> list[float]:
 
     Args:
         text: input text.
-        use_model: if False, force hash fallback. If None (default), try real
-            model and fall back to hash if sentence-transformers unavailable.
+        use_model: if False, force hash fallback. If True, force real model (raise error on fail).
+            If None (default), try real model and fall back to hash with a warning.
     """
     if use_model is False:
         return _hash_embed(text or "", EMBED.dim)
+
     try:
         model = _get_model()
         vec = model.encode(text or "", normalize_embeddings=True)
         return vec.tolist()
-    except Exception:
+    except Exception as e:
+        if use_model is True:
+            raise  # Re-raise if we explicitly asked for the model
+        logger.warning(f"Embedding failed, falling back to hash: {e}")
         return _hash_embed(text or "", EMBED.dim)
 
 
@@ -61,7 +92,8 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
         model = _get_model()
         vecs = model.encode(texts, normalize_embeddings=True, batch_size=64)
         return vecs.tolist()
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Batch embedding failed, falling back to hash: {e}")
         return [_hash_embed(t, EMBED.dim) for t in texts]
 
 

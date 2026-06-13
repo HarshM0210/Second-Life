@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ML model caches (kept outside repo, but ignore if anyone points HF cache here)
+.cache/
+*.safetensors
+*.bin
+
+# Work-defining process docs — internal team coordination, not committed/pushed
+AGENTS.md
+TASKS.md
+CHANGELOG.md
+review.md
+
+# OS / editor
+.DS_Store
+*.swp

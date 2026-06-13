@@ -19,5 +19,12 @@
     "wishlist": [],
     "searches": [],
     "trends": []
+  },
+  {
+    "user_id": "u-seller",
+    "purchase_history": ["SKU-COFFEE-PRESS"],
+    "wishlist": [],
+    "searches": ["bulk inventory to resell"],
+    "trends": ["coffee", "yoga"]
   }
 ]

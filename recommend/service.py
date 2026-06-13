@@ -18,6 +18,7 @@ except ImportError:
 
 from .pipeline import Recommender
 from .schemas import HealthCard, UserContext
+from .embedder import validate_embedder, is_model_loaded
 
 FIXTURES = Path(__file__).resolve().parent.parent / "fixtures"
 
@@ -31,6 +32,11 @@ def _load_json(env_key: str, fixture_name: str) -> list[dict]:
 
 
 def load_recommender() -> Recommender:
+    """Load data and validate that the ML model is operational."""
+    # R8: Ensure the real model is available and producing dense vectors.
+    # This prevents silent fallback to low-quality hash vectors during the demo.
+    validate_embedder()
+
     catalog = _load_json("RECOMMEND_CATALOG", "catalog.json")
     cards_raw = _load_json("RECOMMEND_HEALTH_CARDS", "health_cards.json")
     sku_text = {item["sku_id"]: item["text"] for item in catalog}
@@ -43,10 +49,21 @@ def load_users() -> dict[str, UserContext]:
     return {u["user_id"]: UserContext.from_dict(u) for u in users_raw}
 
 
+_recommender: "Recommender | None" = None
+_users: "dict[str, UserContext] | None" = None
+
+
 if FastAPI is not None:
-    app = FastAPI(title="Second Life — Recommend (Module 2)")
-    _recommender = load_recommender()
-    _users = load_users()
+    from contextlib import asynccontextmanager
+
+    @asynccontextmanager
+    async def lifespan(app):
+        global _recommender, _users
+        _recommender = load_recommender()
+        _users = load_users()
+        yield
+
+    app = FastAPI(title="Second Life — Recommend (Module 2)", lifespan=lifespan)
 
     @app.get("/recommend")
     def recommend(user_id: str, k: int = 10):
@@ -57,4 +74,8 @@ if FastAPI is not None:
 
     @app.get("/health")
     def health():
-        return {"status": "ok", "module": "recommend"}
+        return {
+            "status": "ok",
+            "module": "recommend",
+            "model_loaded": is_model_loaded()
+        }

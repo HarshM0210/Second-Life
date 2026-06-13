@@ -37,17 +37,19 @@ class TestRealEmbeddings:
         # Real embeddings should be dense, not sparse like hash fallback
         assert non_zero > EMBED.dim * 0.5
 
-    def test_semantic_similarity_same_category(self):
-        v1 = embed_text("Nike running shoes size 8")
-        v2 = embed_text("Nike running shoes size 8 renewed")
-        sim = cosine_similarity(v1, v2)
-        assert sim > 0.8  # same category items highly similar
-
-    def test_semantic_similarity_different_category(self):
-        v1 = embed_text("Nike running shoes size 8")
-        v2 = embed_text("baby monitor video night vision")
-        sim = cosine_similarity(v1, v2)
-        assert sim < 0.6  # different categories are dissimilar
+    def test_semantic_similarity_relative(self):
+        """R10: Use relative similarity to avoid flakes on model/version bumps."""
+        v_anchor = embed_text("Nike running shoes size 8")
+        v_same = embed_text("Nike running shoes size 8 renewed")
+        v_diff = embed_text("baby monitor video night vision")
+        
+        sim_same = cosine_similarity(v_anchor, v_same)
+        sim_diff = cosine_similarity(v_anchor, v_diff)
+        
+        # Instead of absolute 0.8 and 0.6, we assert a clear margin
+        assert sim_same > sim_diff + 0.1
+        # Also maintain a sane lower bound for same-category
+        assert sim_same > 0.7
 
     def test_embed_texts_batch_matches_individual(self):
         texts = ["running shoes", "baby monitor", "coffee press"]

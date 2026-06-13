@@ -24,13 +24,19 @@ class HealthCard:
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> "HealthCard":
         """Tolerant parse — ignores extra fields, defaults missing ones."""
+        def safe_float(v, default=0.0):
+            try:
+                return float(v)
+            except (ValueError, TypeError):
+                return default
+
         return cls(
-            sku_id=str(d["sku_id"]),
+            sku_id=str(d.get("sku_id", "unknown")),
             condition=str(d.get("condition", "Unknown")),
-            health_score=float(d.get("health_score", 0.0)),
-            confidence=float(d.get("confidence", 0.0)),
-            price=float(d.get("price", 0.0)),
-            original_price=float(d.get("original_price", 0.0)),
+            health_score=safe_float(d.get("health_score")),
+            confidence=safe_float(d.get("confidence")),
+            price=safe_float(d.get("price")),
+            original_price=safe_float(d.get("original_price")),
             is_renewed=bool(d.get("is_renewed", False)),
         )
 
