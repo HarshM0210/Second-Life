@@ -1,0 +1,23 @@
+[
+  {
+    "user_id": "u-priya",
+    "purchase_history": ["SKU-YOGA-MAT"],
+    "wishlist": ["SKU-NIKE-RUN-8"],
+    "searches": ["running shoes size 8"],
+    "trends": ["athleisure"]
+  },
+  {
+    "user_id": "u-rahul",
+    "purchase_history": ["SKU-COFFEE-PRESS"],
+    "wishlist": ["SKU-BABYMON-1"],
+    "searches": ["baby monitor video"],
+    "trends": ["parenting"]
+  },
+  {
+    "user_id": "u-coldstart",
+    "purchase_history": [],
+    "wishlist": [],
+    "searches": [],
+    "trends": []
+  }
+]

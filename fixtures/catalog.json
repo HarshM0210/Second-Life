@@ -1,0 +1,10 @@
+[
+  {"sku_id": "SKU-NIKE-RUN-8",   "text": "Nike running shoes size 8 lightweight breathable"},
+  {"sku_id": "SKU-NIKE-RUN-8R",  "text": "Nike running shoes size 8 lightweight breathable renewed"},
+  {"sku_id": "SKU-BABYMON-1",    "text": "baby monitor video night vision two way audio"},
+  {"sku_id": "SKU-BABYMON-1R",   "text": "baby monitor video night vision two way audio renewed"},
+  {"sku_id": "SKU-COFFEE-PRESS", "text": "french press coffee maker stainless steel"},
+  {"sku_id": "SKU-YOGA-MAT",     "text": "yoga mat non slip eco friendly"},
+  {"sku_id": "SKU-HEADPHONE-NC", "text": "noise cancelling headphones wireless over ear"},
+  {"sku_id": "SKU-HEADPHONE-NCR","text": "noise cancelling headphones wireless over ear renewed"}
+]

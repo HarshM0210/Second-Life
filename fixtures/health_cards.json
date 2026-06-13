@@ -1,0 +1,10 @@
+[
+  {"sku_id": "SKU-NIKE-RUN-8R",   "condition": "Excellent", "health_score": 94, "confidence": 0.95, "price": 1399, "original_price": 1999, "is_renewed": true},
+  {"sku_id": "SKU-BABYMON-1R",    "condition": "Very Good", "health_score": 88, "confidence": 0.91, "price": 2100, "original_price": 3500, "is_renewed": true},
+  {"sku_id": "SKU-HEADPHONE-NCR", "condition": "Good",      "health_score": 72, "confidence": 0.84, "price": 4500, "original_price": 8999, "is_renewed": true},
+  {"sku_id": "SKU-NIKE-RUN-8",    "condition": "New",       "health_score": 100, "confidence": 1.0, "price": 1999, "original_price": 1999, "is_renewed": false},
+  {"sku_id": "SKU-BABYMON-1",     "condition": "New",       "health_score": 100, "confidence": 1.0, "price": 3500, "original_price": 3500, "is_renewed": false},
+  {"sku_id": "SKU-COFFEE-PRESS",  "condition": "New",       "health_score": 100, "confidence": 1.0, "price": 899,  "original_price": 899,  "is_renewed": false},
+  {"sku_id": "SKU-YOGA-MAT",      "condition": "New",       "health_score": 100, "confidence": 1.0, "price": 599,  "original_price": 599,  "is_renewed": false},
+  {"sku_id": "SKU-HEADPHONE-NC",  "condition": "New",       "health_score": 100, "confidence": 1.0, "price": 8999, "original_price": 8999, "is_renewed": false}
+]
