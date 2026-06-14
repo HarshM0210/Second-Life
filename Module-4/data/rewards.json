@@ -1,0 +1,37 @@
+[
+  {
+    "reward_id": "renewed_discount_100",
+    "name": "₹10 off any Renewed product",
+    "cost": 100,
+    "description": "100 coins = ₹10 off. The core flywheel — every coin spent clears one more second-hand item.",
+    "category": "renewed_discount"
+  },
+  {
+    "reward_id": "renewed_flash_access_250",
+    "name": "Priority access to Renewed flash sales",
+    "cost": 250,
+    "description": "Early access to Renewed flash sales. Scarcity + aspiration, Prime-style.",
+    "category": "renewed_discount"
+  },
+  {
+    "reward_id": "prime_1month_1000",
+    "name": "1 month Prime membership",
+    "cost": 1000,
+    "description": "High perceived value, strong retention hook.",
+    "category": "membership"
+  },
+  {
+    "reward_id": "impact_certificate_500",
+    "name": "Green Impact Certificate (PDF)",
+    "cost": 500,
+    "description": "Signed + SHA-256 hashed, shareable proof of your CO2e impact.",
+    "category": "certificate"
+  },
+  {
+    "reward_id": "donate_ngo_reforestation",
+    "name": "Donate coins to NGO reforestation",
+    "cost": 100,
+    "description": "Donate coins toward reforestation, linked to India's Green Credit Programme.",
+    "category": "donation"
+  }
+]

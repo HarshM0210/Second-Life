@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Green Coin Wallet — Second Life</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --green-900:#0b3d2e; --green-700:#12694c; --green-500:#1fa971;
+      --green-300:#7ed9b0; --ink:#10231b; --muted:#5b756a; --bg:#f3f8f5;
+      --card:#ffffff; --shadow:0 6px 24px rgba(16,35,27,.08);
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+           background:var(--bg); color:var(--ink); }
+    .ticker { background:var(--green-900); color:#dff7ec; font-size:14px;
+              padding:10px 18px; text-align:center; letter-spacing:.2px; }
+    .wrap { max-width:880px; margin:0 auto; padding:18px 18px 60px; }
+    .hero { background:linear-gradient(135deg,var(--green-700),var(--green-500));
+            color:#fff; border-radius:18px; padding:26px 28px; box-shadow:var(--shadow);
+            display:flex; justify-content:space-between; align-items:flex-end; gap:16px; }
+    .hero .bal { font-size:54px; font-weight:800; line-height:1; }
+    .hero .lbl { opacity:.85; font-size:13px; text-transform:uppercase; letter-spacing:1px; }
+    .hero .co2 { text-align:right; font-size:14px; opacity:.95; }
+    .hero .co2 b { font-size:26px; display:block; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:18px; }
+    @media (max-width:760px){ .grid{ grid-template-columns:1fr; } .hero{flex-direction:column; align-items:flex-start;} .hero .co2{text-align:left;} }
+    .card { background:var(--card); border-radius:16px; padding:18px 20px; box-shadow:var(--shadow); }
+    .card h3 { margin:0 0 14px; font-size:15px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); }
+    .badges { display:flex; gap:14px; }
+    .badge { text-align:center; flex:1; }
+    .badge .ic { font-size:34px; filter:grayscale(1); opacity:.35; transition:.3s; }
+    .badge.on .ic { filter:none; opacity:1; transform:scale(1.05); }
+    .badge .nm { font-size:11px; margin-top:4px; color:var(--muted); }
+    .row { display:flex; justify-content:space-between; align-items:center; padding:9px 0;
+           border-bottom:1px solid #eef3f0; font-size:14px; }
+    .row:last-child { border-bottom:none; }
+    .amt-pos { color:var(--green-500); font-weight:700; }
+    .amt-neg { color:#c0492f; font-weight:700; }
+    .src { color:var(--muted); font-size:12px; }
+    .reward { display:flex; justify-content:space-between; align-items:center; gap:10px;
+              padding:12px; border:1px solid #e7efea; border-radius:12px; margin-bottom:10px; }
+    .reward .nm { font-weight:600; font-size:14px; }
+    .reward .ds { font-size:12px; color:var(--muted); margin-top:3px; }
+    button { background:var(--green-500); color:#fff; border:none; border-radius:10px;
+             padding:9px 14px; font-weight:600; cursor:pointer; white-space:nowrap; }
+    button:disabled { background:#cdddd4; cursor:not-allowed; }
+    .sim { background:#fff; border:1px dashed var(--green-300); border-radius:16px;
+           padding:16px 20px; margin-top:18px; }
+    .sim h3 { margin:0 0 12px; font-size:14px; color:var(--green-700); }
+    .sim label { font-size:12px; color:var(--muted); display:block; margin-bottom:4px; }
+    .sim select,.sim input { width:100%; padding:8px; border:1px solid #d9e6df; border-radius:8px; }
+    .sim .fields { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:12px; }
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+             background:var(--green-900); color:#dff7ec; padding:14px 22px; border-radius:12px;
+             box-shadow:var(--shadow); font-size:14px; opacity:0; transition:.3s; pointer-events:none; }
+    .toast.show { opacity:1; bottom:34px; }
+    .cost { font-size:13px; color:var(--green-700); font-weight:700; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+    const API = "http://localhost:8002/api/v4";
+    const USER = "priya";
+
+    function useCountUp(target) {
+      const [val, setVal] = useState(target);
+      const prev = useRef(target);
+      useEffect(() => {
+        const from = prev.current, to = target, start = performance.now(), dur = 700;
+        let raf;
+        const tick = (now) => {
+          const p = Math.min(1, (now - start) / dur);
+          setVal(Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3))));
+          if (p < 1) raf = requestAnimationFrame(tick);
+          else prev.current = to;
+        };
+        raf = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(raf);
+      }, [target]);
+      return val;
+    }
+
+    function Ticker() {
+      const [s, setS] = useState({ co2e_avoided_kg: 0, items_given_second_life: 0, trees_equivalent: 0 });
+      useEffect(() => {
+        const load = () => fetch(`${API}/coins/impact/summary`).then(r => r.json()).then(setS).catch(()=>{});
+        load();
+        const id = setInterval(load, 10000);
+        return () => clearInterval(id);
+      }, []);
+      return (
+        <div className="ticker">
+          🌱 {s.co2e_avoided_kg} kg CO₂e avoided · {s.items_given_second_life} items given a second life · ≈ {s.trees_equivalent} trees
+          <span style={{opacity:.6}}> · SecondLIFE beta, since launch</span>
+        </div>
+      );
+    }
+
+    function Hero({ wallet }) {
+      const bal = useCountUp(wallet.balance);
+      const eq = wallet.equivalents || {};
+      return (
+        <div className="hero">
+          <div>
+            <div className="lbl">Green Coin balance</div>
+            <div className="bal">{bal.toLocaleString()}</div>
+          </div>
+          <div className="co2">
+            <span className="lbl" style={{color:'#dff7ec'}}>Lifetime impact</span>
+            <b>{wallet.co2e_total_kg} kg CO₂e</b>
+            ≈ {eq.trees_per_month} trees/mo · {eq.km_not_driven} km not driven
+          </div>
+        </div>
+      );
+    }
+
+    function BadgeShelf({ badges }) {
+      return (
+        <div className="card">
+          <h3>Impact badges</h3>
+          <div className="badges">
+            {badges.map(b => (
+              <div key={b.slug} className={"badge" + (b.unlocked ? " on" : "")} title={b.equivalent}>
+                <div className="ic">{b.icon}</div>
+                <div className="nm">{b.name}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function Timeline({ history }) {
+      const label = (s) => s.replace(/^(disposition|bonus|reward|badge):/, "").replace(/_/g, " ");
+      return (
+        <div className="card">
+          <h3>Activity</h3>
+          {history.length === 0 && <div className="src">No activity yet — process a return below.</div>}
+          {history.map(h => (
+            <div className="row" key={h.id}>
+              <div>
+                <div style={{textTransform:'capitalize'}}>{label(h.source)}</div>
+                <div className="src">{h.co2e_kg > 0 ? `${h.co2e_kg} kg CO₂e · ` : ""}{new Date(h.created_at).toLocaleString()}</div>
+              </div>
+              <div className={h.amount >= 0 ? "amt-pos" : "amt-neg"}>
+                {h.amount >= 0 ? "+" : ""}{h.amount}{h.badge && h.event_type === "badge_earned" ? " 🏅" : ""}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function Redeem({ balance, onRedeem }) {
+      const [rewards, setRewards] = useState([]);
+      useEffect(() => {
+        fetch(`${API}/coins/rewards`).then(r => r.json()).then(setRewards).catch(()=>{});
+      }, []);
+      return (
+        <div className="card">
+          <h3>Redeem on Renewed</h3>
+          {rewards.map(r => (
+            <div className="reward" key={r.reward_id}>
+              <div>
+                <div className="nm">{r.name}</div>
+                <div className="ds">{r.description}</div>
+                <div className="cost">{r.cost} coins</div>
+              </div>
+              <button disabled={balance < r.cost} onClick={() => onRedeem(r.reward_id)}>
+                Redeem
+              </button>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function Simulator({ onEarn }) {
+      const [d, setD] = useState("DONATE_LOCAL");
+      const [cat, setCat] = useState("footwear");
+      const [km, setKm] = useState(10);
+      const dispositions = ["P2P_LOCAL","DONATE_LOCAL","KEEP","REFURBISH","RESELL","RECYCLE","RETURN_FC"];
+      const cats = ["electronics","appliances","clothing","footwear","toys","books"];
+      return (
+        <div className="sim">
+          <h3>▶ Demo: process a returned item</h3>
+          <div className="fields">
+            <div>
+              <label>Disposition</label>
+              <select value={d} onChange={e => setD(e.target.value)}>
+                {dispositions.map(x => <option key={x}>{x}</option>)}
+              </select>
+            </div>
+            <div>
+              <label>Category</label>
+              <select value={cat} onChange={e => setCat(e.target.value)}>
+                {cats.map(x => <option key={x}>{x}</option>)}
+              </select>
+            </div>
+            <div>
+              <label>Buyer distance (km)</label>
+              <input type="number" value={km} onChange={e => setKm(+e.target.value)} />
+            </div>
+          </div>
+          <button onClick={() => onEarn({ disposition: d, category: cat, buyer_distance_km: km })}>
+            Issue Green Coins
+          </button>
+        </div>
+      );
+    }
+
+    function App() {
+      const [wallet, setWallet] = useState(null);
+      const [toast, setToast] = useState("");
+      const tref = useRef();
+
+      const refresh = useCallback(() => {
+        fetch(`${API}/coins/wallet/${USER}`).then(r => r.json()).then(setWallet).catch(()=>{});
+      }, []);
+      useEffect(refresh, [refresh]);
+
+      const flash = (msg) => {
+        setToast(msg);
+        clearTimeout(tref.current);
+        tref.current = setTimeout(() => setToast(""), 3200);
+      };
+
+      const earn = (params) => {
+        fetch(`${API}/coins/earn`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: USER, item_id: "item-" + Date.now(), ...params }),
+        }).then(r => r.json()).then(res => {
+          let msg = `+${res.coins_earned} coins · ${res.co2e_kg} kg CO₂e avoided`;
+          if (res.badge_unlocked) msg += ` · ${res.badge_unlocked.icon} ${res.badge_unlocked.name} unlocked!`;
+          flash(msg);
+          refresh();
+        }).catch(() => flash("Could not reach Green Coin service on :8002"));
+      };
+
+      const redeem = (reward_id) => {
+        fetch(`${API}/coins/redeem`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: USER, reward_id }),
+        }).then(r => r.json()).then(res => {
+          flash(res.success ? "Redeemed! Balance updated." : `Redeem failed: ${res.reason}`);
+          refresh();
+        });
+      };
+
+      if (!wallet) return (
+        <div>
+          <Ticker />
+          <div className="wrap"><div className="card">Connecting to Green Coin service on <b>localhost:8002</b>…</div></div>
+        </div>
+      );
+
+      return (
+        <div>
+          <Ticker />
+          <div className="wrap">
+            <Hero wallet={wallet} />
+            <Simulator onEarn={earn} />
+            <div className="grid">
+              <Timeline history={wallet.history} />
+              <div>
+                <BadgeShelf badges={wallet.badges} />
+                <div style={{height:18}} />
+                <Redeem balance={wallet.balance} onRedeem={redeem} />
+              </div>
+            </div>
+          </div>
+          <div className={"toast" + (toast ? " show" : "")}>{toast}</div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
