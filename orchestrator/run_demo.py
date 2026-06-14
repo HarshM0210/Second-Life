@@ -12,6 +12,13 @@ import json
 import os
 import sys
 
+# Windows consoles default to cp1252 and crash on ₹/emoji/✓ — force UTF-8 output.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+    except Exception:
+        pass
+
 from orchestrator.clients import GreenCoinClient
 from orchestrator.gateway import services as probe_services
 from orchestrator.pipeline import Orchestrator

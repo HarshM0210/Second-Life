@@ -18,7 +18,7 @@ async def lifespan(app: FastAPI):
     # Load fixtures
     fp = Path(__file__).resolve().parent.parent / "fixtures" / "listings.json"
     if fp.exists():
-        app.state.listings = json.loads(fp.read_text())
+        app.state.listings = json.loads(fp.read_text(encoding="utf-8"))
     # Warm the pricing model so /health reports its true state (cheap; <1s).
     try:
         pricing.ensure_model()

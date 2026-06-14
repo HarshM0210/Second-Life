@@ -1,14 +1,21 @@
-INFO:     Started server process [604629]
+INFO:     Started server process [622717]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8002 (Press CTRL+C to quit)
-INFO:     127.0.0.1:58474 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58484 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36856 - "GET /api/v4/coins/impact/summary HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36852 - "GET /api/v4/coins/impact/summary HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50630 - "GET /api/v4/coins/impact/summary HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35624 - "GET /api/v4/coins/rewards HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35650 - "GET /api/v4/coins/rewards HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35632 - "GET /api/v4/coins/wallet/CUST-PRIYA HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35644 - "GET /api/v4/coins/wallet/CUST-PRIYA HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35654 - "GET /api/v4/coins/impact/summary HTTP/1.1" 200 OK
+INFO:     Uvicorn running on http://127.0.0.1:8002 (Press CTRL+C to quit)
+INFO:     127.0.0.1:47302 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47308 - "GET /api/v4/coins/impact/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38340 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38346 - "POST /api/v4/purchase-avoidance HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38352 - "POST /api/v4/coins/earn HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38356 - "POST /api/v4/coins/earn HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38366 - "POST /api/v4/coins/earn HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38372 - "POST /api/v4/coins/earn HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38388 - "GET /api/v4/coins/wallet/CUST-PRIYA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38398 - "GET /api/v4/coins/wallet/CUST-MAYA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38400 - "GET /api/v4/coins/wallet/CUST-RAHUL HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38408 - "GET /api/v4/coins/wallet/CUST-SOFIA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38412 - "GET /api/v4/coins/impact/summary HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [622717]

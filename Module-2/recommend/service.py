@@ -27,8 +27,8 @@ def _load_json(env_key: str, fixture_name: str) -> list[dict]:
     """Load from env-specified path if set, else fall back to fixtures."""
     path = os.environ.get(env_key)
     if path and Path(path).exists():
-        return json.loads(Path(path).read_text())
-    return json.loads((FIXTURES / fixture_name).read_text())
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    return json.loads((FIXTURES / fixture_name).read_text(encoding="utf-8"))
 
 
 def load_recommender() -> Recommender:

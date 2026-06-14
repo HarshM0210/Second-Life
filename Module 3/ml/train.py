@@ -121,7 +121,7 @@ def train():
         "feature_importance": sorted_importance,
         "hyperparameters":   LGBM_PARAMS,
     }
-    with open(REPORT_PATH, "w") as f:
+    with open(REPORT_PATH, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
     print(f"Report saved  → {REPORT_PATH}")
 
