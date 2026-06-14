@@ -20,6 +20,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+from green_coin.config import settings
 from green_coin.core import gamification
 from green_coin.core.co2e_engine import equivalents
 from green_coin.core.gamification import Badge
@@ -106,8 +107,10 @@ def earn_bonus(
         new_balance = service.earn_bonus(
             db, user_id=req.user_id, coins=req.coins, source=req.source, item_id=req.item_id
         )
+        # Report the amount actually credited (the service caps at EARN_CAP_PER_EVENT).
+        credited = min(req.coins, settings.EARN_CAP_PER_EVENT)
         return BonusEarnResponse(
-            coins_earned=min(req.coins, new_balance) if new_balance >= 0 else req.coins,
+            coins_earned=credited,
             new_balance=new_balance,
             source=req.source,
         )
@@ -141,39 +144,51 @@ def redeem(
 @router.get("/wallet/{user_id}", response_model=WalletResponse)
 def wallet(user_id: str, db: Session = Depends(get_db)) -> Any:
     """Full wallet view for the React UI: balance, CO2e, badges, history."""
-    balance = CoinLedgerRepository.get_balance(db, user_id)
-    co2e = CoinLedgerRepository.get_co2e_total(db, user_id)
-    history = CoinLedgerRepository.get_history(db, user_id, limit=20)
+    try:
+        balance = CoinLedgerRepository.get_balance(db, user_id)
+        co2e = CoinLedgerRepository.get_co2e_total(db, user_id)
+        history = CoinLedgerRepository.get_history(db, user_id, limit=20)
 
-    unlocked_slugs = {b.slug for b in gamification.unlocked_badges(co2e)}
-    badges = [
-        _badge_out(b, unlocked=b.slug in unlocked_slugs)
-        for b in gamification.BADGES
-    ]
+        unlocked_slugs = {b.slug for b in gamification.unlocked_badges(co2e)}
+        badges = [
+            _badge_out(b, unlocked=b.slug in unlocked_slugs)
+            for b in gamification.BADGES
+        ]
 
-    return WalletResponse(
-        user_id=user_id,
-        balance=balance,
-        co2e_total_kg=round(co2e, 2),
-        equivalents=Equivalents(**equivalents(co2e)),
-        badges=[b for b in badges if b is not None],
-        history=history_to_dicts(history),
-    )
+        return WalletResponse(
+            user_id=user_id,
+            balance=balance,
+            co2e_total_kg=round(co2e, 2),
+            equivalents=Equivalents(**equivalents(co2e)),
+            badges=[b for b in badges if b is not None],
+            history=history_to_dicts(history),
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.error("wallet_endpoint_error user_id=%s error=%s", user_id, exc)
+        return JSONResponse(status_code=503, content={"detail": "Service temporarily unavailable"})
 
 
 @router.get("/impact/summary", response_model=ImpactSummaryResponse)
 def impact_summary(db: Session = Depends(get_db)) -> Any:
     """Platform-wide impact totals — powers the live demo ticker."""
-    total_co2e = CoinLedgerRepository.platform_co2e_total(db)
-    items = CoinLedgerRepository.platform_items_count(db)
-    return ImpactSummaryResponse(
-        co2e_avoided_kg=round(total_co2e, 1),
-        items_given_second_life=items,
-        trees_equivalent=round(total_co2e / 0.83, 1),
-    )
+    try:
+        total_co2e = CoinLedgerRepository.platform_co2e_total(db)
+        items = CoinLedgerRepository.platform_items_count(db)
+        return ImpactSummaryResponse(
+            co2e_avoided_kg=round(total_co2e, 1),
+            items_given_second_life=items,
+            trees_equivalent=round(total_co2e / 0.83, 1),
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.error("impact_summary_endpoint_error error=%s", exc)
+        return JSONResponse(status_code=503, content={"detail": "Service temporarily unavailable"})
 
 
 @router.get("/rewards", response_model=list[Reward])
 def rewards() -> Any:
     """Return the redeemable rewards catalog."""
-    return list(get_rewards().values())
+    try:
+        return list(get_rewards().values())
+    except Exception as exc:  # noqa: BLE001
+        logger.error("rewards_endpoint_error error=%s", exc)
+        return JSONResponse(status_code=503, content={"detail": "Service temporarily unavailable"})
