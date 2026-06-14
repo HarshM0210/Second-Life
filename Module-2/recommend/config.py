@@ -24,5 +24,17 @@ class EmbedConfig:
     dim: int = 768                                       # gte-modernbert-base dimension
 
 
+@dataclass(frozen=True)
+class SocialConfig:
+    """Consent-gated social signals → profile text. Weights are repeat-counts
+    (same mechanism as profile.py's 2× wishlist), so stronger signals dominate the
+    embedded profile. Follows/likes are explicit affinity; captions are noisiest."""
+    follows_weight: int = 2   # brands/creators followed — strongest, low-noise
+    likes_weight: int = 2     # liked posts/products — recent intent
+    topics_weight: int = 1    # hashtags/topics — broad interest
+    captions_weight: int = 1  # own posts/bio — richest but noisiest
+
+
 RERANK = RerankConfig()
 EMBED = EmbedConfig()
+SOCIAL = SocialConfig()

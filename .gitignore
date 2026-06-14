@@ -14,7 +14,11 @@ env/
 *.bin
 
 # Regenerable ESCI dataset cache (re-downloads via esci_loader). Keep data/eval/* (results).
-data/esci/
+Module-2/data/esci/
+
+# Module 5 — regenerable trained model + synthetic training data (rebuild via `python -m p2p.train`)
+Module-5/models/
+Module-5/data/synthetic/
 
 # Work-defining process docs — internal team coordination, not committed/pushed
 AGENTS.md

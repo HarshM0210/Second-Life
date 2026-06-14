@@ -4,14 +4,28 @@
     "purchase_history": ["SKU-YOGA-MAT"],
     "wishlist": ["SKU-NIKE-RUN-8"],
     "searches": ["running shoes size 8"],
-    "trends": ["athleisure"]
+    "trends": ["athleisure"],
+    "social": {
+      "consent": true,
+      "follows": ["Nike", "Decathlon", "a marathon coach"],
+      "likes": ["trail running reel", "yoga flow post"],
+      "topics": ["running", "athleisure", "marathon"],
+      "captions": ["weekend long run, training for my first marathon"]
+    }
   },
   {
     "user_id": "u-rahul",
     "purchase_history": ["SKU-COFFEE-PRESS"],
     "wishlist": ["SKU-BABYMON-1"],
     "searches": ["baby monitor video"],
-    "trends": ["parenting"]
+    "trends": ["parenting"],
+    "social": {
+      "consent": true,
+      "follows": ["a parenting blog", "Johnson's Baby"],
+      "likes": ["baby sleep tips post", "nursery setup reel"],
+      "topics": ["parenting", "newborn", "baby gear"],
+      "captions": ["first-time dad, surviving on coffee"]
+    }
   },
   {
     "user_id": "u-coldstart",
@@ -25,6 +39,11 @@
     "purchase_history": ["SKU-COFFEE-PRESS"],
     "wishlist": [],
     "searches": ["bulk inventory to resell"],
-    "trends": ["coffee", "yoga"]
+    "trends": ["coffee", "yoga"],
+    "social": {
+      "consent": false,
+      "follows": ["a coffee roaster"],
+      "topics": ["coffee", "yoga"]
+    }
   }
 ]

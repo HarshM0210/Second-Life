@@ -31,6 +31,10 @@ class Recommender:
         # Precompute history vectors for "similar to past purchase" detection
         hist_vecs = [self.item_vecs[s] for s in history_set if s in self.item_vecs]
 
+        # Consent-gated social interest tokens (empty set if not connected/consented)
+        from .social import social_interest_terms
+        social_terms = social_interest_terms(user)
+
         for sku_id, _ in retrieved:
             r: list[str] = []
             if sku_id in wishlist_set:
@@ -48,6 +52,11 @@ class Recommender:
                     if trend.lower() in text:
                         r.append(f"trending in {trend}")
                         break
+            # Social-interest match (only when the user connected an account)
+            if social_terms:
+                text = self.sku_text.get(sku_id, "").lower()
+                if any(term in text for term in social_terms):
+                    r.append("matches your social interests")
             if r:
                 reasons[sku_id] = r
         return reasons

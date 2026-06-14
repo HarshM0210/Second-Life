@@ -37,4 +37,12 @@ def assemble_profile_text(
     parts += user.searches * 2
     parts += resolve(user.purchase_history)
     parts += user.trends
+
+    # Consent-gated social interests (follows/likes/topics/bio). Returns "" if the
+    # user hasn't connected an account, so this is a no-op for non-social users.
+    from .social import extract_social_text
+    social_text = extract_social_text(user)
+    if social_text:
+        parts.append(social_text)
+
     return " ".join(p for p in parts if p)

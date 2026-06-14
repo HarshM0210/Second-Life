@@ -1,0 +1,29 @@
+[
+  {
+    "sku_id": "SKU-ELEC-001",
+    "condition": "Excellent",
+    "health_score": 88,
+    "confidence": 0.91,
+    "price": 4200,
+    "original_price": 5500,
+    "is_renewed": true
+  },
+  {
+    "sku_id": "SKU-FIT-003",
+    "condition": "Good",
+    "health_score": 72,
+    "confidence": 0.85,
+    "price": 4900,
+    "original_price": 7000,
+    "is_renewed": false
+  },
+  {
+    "sku_id": "SKU-BABY-002",
+    "condition": "Fair",
+    "health_score": 55,
+    "confidence": 0.78,
+    "price": 1800,
+    "original_price": 3500,
+    "is_renewed": false
+  }
+]

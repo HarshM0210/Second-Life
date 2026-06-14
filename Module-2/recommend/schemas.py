@@ -47,6 +47,38 @@ class HealthCard:
         return max(0.0, 1.0 - self.price / self.original_price)
 
 
+# --- Input we consume: Social profile (consent-gated) ------------------------
+@dataclass
+class SocialProfile:
+    """Signals from a user's connected social account. USED ONLY IF consent=True.
+
+    Privacy: this is opt-in. A mock connector populates it from fixtures for the
+    demo; real OAuth integrations + data-minimization are the production path.
+    """
+    consent: bool = False
+    follows: list[str] = field(default_factory=list)   # brands / creators followed
+    likes: list[str] = field(default_factory=list)     # liked posts / products
+    topics: list[str] = field(default_factory=list)     # hashtags / topics engaged
+    captions: list[str] = field(default_factory=list)   # user's own posts / bio text
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any] | None) -> "SocialProfile":
+        if not d:
+            return cls()
+        return cls(
+            consent=bool(d.get("consent", False)),
+            follows=list(d.get("follows", [])),
+            likes=list(d.get("likes", [])),
+            topics=list(d.get("topics", [])),
+            captions=list(d.get("captions", [])),
+        )
+
+    @property
+    def active(self) -> bool:
+        """True only when the user consented AND there is some signal to use."""
+        return self.consent and bool(self.follows or self.likes or self.topics or self.captions)
+
+
 # --- Input we consume: User context ------------------------------------------
 @dataclass
 class UserContext:
@@ -55,6 +87,7 @@ class UserContext:
     wishlist: list[str] = field(default_factory=list)
     searches: list[str] = field(default_factory=list)
     trends: list[str] = field(default_factory=list)
+    social: SocialProfile = field(default_factory=SocialProfile)
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> "UserContext":
@@ -64,6 +97,7 @@ class UserContext:
             wishlist=list(d.get("wishlist", [])),
             searches=list(d.get("searches", [])),
             trends=list(d.get("trends", [])),
+            social=SocialProfile.from_dict(d.get("social")),
         )
 
 

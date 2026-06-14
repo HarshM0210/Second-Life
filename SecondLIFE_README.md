@@ -184,10 +184,33 @@ Ranked feed mixing refurbished and new SKUs. Novel bit: **refurbished inventory 
 **Prototype approach (local):** embedding-based retrieval with a **local** sentence/image embedding model (e.g. `bge-small`, CLIP for images) — no embedding API. Embed user (history/wishlist text) and items (title + condition + price), cosine-rank, boost high-score Renewed items. Small in-memory catalog is enough.
 
 ### Build checklist
-- [ ] User profile assembler (history + wishlist + searches → text blob)
-- [ ] Item embeddings (precompute, local model)
-- [ ] Cosine retrieval + re-rank boosting high-score Renewed items
-- [ ] Mixed feed UI (New / Renewed badges)
+- [x] User profile assembler (history + wishlist + searches → text blob)
+- [x] Item embeddings (precompute, local model)
+- [x] Cosine retrieval + re-rank boosting high-score Renewed items
+- [ ] Mixed feed UI (New / Renewed badges) — *backend emits New/Renewed badges + per-item reasons; React UI not built*
+
+### As built (2026-06-14) — see `Module-2/documentation.md`
+
+The backend shipped end-to-end as a FastAPI service (`GET /recommend?user_id=`),
+and went **beyond the original plan** in three ways:
+
+- **Real 2025 embedder, not `bge-small`.** Phase 2.1 upgraded the embedder to
+  **`Alibaba-NLP/gte-modernbert-base`** (768-dim, early 2025) with an **opt-in
+  `Qwen/Qwen3-Reranker-0.6B`** cross-encoder stage. Both local, no API. `bge-small`
+  remains a documented lighter fallback. Image/CLIP slot is declared but not wired.
+- **A real eval, not just a synthetic demo.** Offline **NDCG@10 / Recall@k / MRR** on an
+  **Amazon ESCI** subset (500 queries, 1332 graded judgments). Honest finding: the
+  embedder upgrade is a *marginal* win (+0.0026 NDCG@10) and the reranker is *flat* on
+  short product titles → off by default. A **market-aware policy** layer (inventory /
+  demand / logistics) **visibly flips** the Renewed boost live.
+- **NEW feature — Social Media access (consent-gated).** A user's connected social
+  activity (follows / likes / topics / bio) becomes another interest-text signal feeding
+  the same pipeline, with a `"matches your social interests"` reason. **Opt-in only** (no
+  consent = full no-op); **mock connector, no scraping/credentials** — real OAuth is the
+  production path. Strengthens the "on-device / privacy-preserving" thesis.
+
+**Deferred / future:** the React feed UI; EmbeddingGemma swap (HF-gated); a learned
+ranker / LinUCB bandit; ANN at catalog scale. **Tests:** 108 green.
 
 ---
 
@@ -240,9 +263,33 @@ Directly addresses Rahul's persona and the organizers' "peer-to-peer exchange" p
 - Item can ship buyer→buyer (or via a locker), **never touching an FC** → near-zero reverse-logistics cost and the largest CO₂e saving → biggest Green Coin reward.
 
 ### Build checklist
-- [ ] "Resell instead of return" option in the return flow
-- [ ] Geo-filtered buyer match (reuse Module 2 embeddings + distance)
-- [ ] Escrow/guarantee mock + listing auto-generated from Health Card
+- [x] "Resell instead of return" flow — `POST /quote` (price the item) → `POST /accept` (schedule pickup)
+- [ ] Geo-filtered buyer match (reuse Module 2 embeddings + distance) — *deferred (see As built)*
+- [~] Escrow/guarantee mock + listing from Health Card — *Health Card consumed for pricing; pickup mock built; escrow not yet*
+
+### As built (2026-06-14) — see `Module-5/documentation.md`
+
+The implemented core **shifted from buyer-matching to a pricing engine** — the harder,
+more valuable half of "list it as a P2P direct sale." A seller offers an item and we:
+
+- **Predict the P2P resale price** with a **neural quantile-MLP** (post-2023,
+  ensemble-free: periodic embeddings + pinball heads + conformal calibration) →
+  point estimate + calibrated **low/high range** + confidence. Held-out: R² 0.968,
+  80% interval coverage, beating a GBM baseline. Trained on a synthetic dataset built
+  from our feature parameters (real datasets — MerRec 166 GB / Amazon text-only — were
+  evaluated and rejected; swapping real data in later is a drop-in).
+- **Condition via a dual path** — Module 1's **Health Card** when present, else local
+  **CLIP zero-shot** scoring of the item photos/video (no API).
+- **Net payout** (gross − Amazon facilitation fee) with an explainable breakdown, and on
+  **Accept** a **mock courier pickup** is scheduled. FastAPI: `/quote`, `/accept`,
+  `/pickup/{id}`, `/health`.
+
+**Still aligned with the plan:** Amazon as the trust wrapper (Health Card), seller never
+deals with strangers/haggling, item ships without an FC.
+
+**Deferred / future:** geo-filtered **buyer matching** (reuse Module 2's `retrieve()` —
+the original Module 5 core), escrow/payments, real logistics, multimodal (image+text)
+pricing. **Tests:** 44 green (+1 gated eval).
 
 ---
 
@@ -262,7 +309,8 @@ Directly addresses Rahul's persona and the organizers' "peer-to-peer exchange" p
   - Condition reasoning — **pick one:**
     - *Option A:* local quantized VLM (Qwen2.5-VL-7B, video-capable) — needs GPU, richest output, highest risk.
     - *Option B (recommended default):* return-reason intent classifier (scikit-learn logreg/keyword) + weighted score formula + template justification; optional YOLOv9/ViT defect-typing. CPU-fine, sub-2s, fully explainable, no labeled defects required.
-  - Embeddings: local `bge-small` / CLIP for Recommend + P2P match.
+  - Recommend (Module 2): local **`gte-modernbert-base`** embeddings + opt-in **`Qwen3-Reranker-0.6B`** (2025, both local) — *upgraded from the originally-planned `bge-small`*.
+  - P2P pricing (Module 5): local **CLIP zero-shot** condition scoring + a **neural quantile-MLP** price model (no embedding API). Buyer-match embeddings (reusing Module 2) are deferred.
   - Deploy on AWS — GPU instance (G-series) needed only for Option A; Option B runs CPU-only, so the live demo has no GPU dependency.
 - **Storage:** in-memory / SQLite for the demo; Postgres + S3 (object store for media) as the production path.
 
