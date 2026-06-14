@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: #eaeded;
+  color: #0f1111;
+  font-family: "Amazon Ember", Arial, system-ui, sans-serif;
+}
+
+@layer components {
+  /* Amazon-style yellow "Buy/Action" button */
+  .btn-amz {
+    @apply rounded-full bg-amz-yellow hover:bg-amz-yellowDark text-[#0f1111]
+           font-medium px-4 py-1.5 text-sm shadow-sm transition-colors
+           border border-[#a88734] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-amz-orange {
+    @apply rounded-full bg-amz-orange hover:bg-amz-yellowDark text-[#0f1111]
+           font-medium px-4 py-1.5 text-sm shadow-sm transition-colors
+           border border-[#a88734];
+  }
+  .btn-ghost {
+    @apply rounded-md border border-gray-300 bg-white hover:bg-gray-50 text-[#0f1111]
+           px-3 py-1.5 text-sm transition-colors;
+  }
+  .card {
+    @apply bg-white rounded-lg shadow-card border border-gray-200;
+  }
+  .link-amz {
+    @apply text-amz-link hover:text-amz-price hover:underline cursor-pointer;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+}

@@ -1,6 +1,16 @@
-INFO:     Started server process [590141]
+INFO:     Started server process [604634]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
-INFO:     127.0.0.1:49716 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49720 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57022 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57028 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60386 - "GET /api/impact HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60394 - "GET /api/impact HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50382 - "GET /api/impact HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50410 - "GET /api/recommend?user_id=u-priya&k=8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50394 - "GET /api/recommend?user_id=u-priya&k=8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40352 - "GET /api/rewards HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40362 - "GET /api/rewards HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40360 - "GET /api/wallet/CUST-PRIYA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40342 - "GET /api/wallet/CUST-PRIYA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40366 - "GET /api/impact HTTP/1.1" 200 OK

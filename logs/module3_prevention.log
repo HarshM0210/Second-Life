@@ -1,11 +1,8 @@
-INFO:     Started server process [590139]
+INFO:     Started server process [604632]
 INFO:     Waiting for application startup.
 /home/drtex/anaconda3/lib/python3.12/site-packages/sklearn/base.py:376: InconsistentVersionWarning: Trying to unpickle estimator LabelEncoder from version 1.7.2 when using version 1.5.1. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
 https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
   warnings.warn(
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8003 (Press CTRL+C to quit)
-INFO:     127.0.0.1:50684 - "POST /api/v1/risk-score HTTP/1.1" 422 Unprocessable Entity
-INFO:     127.0.0.1:42724 - "POST /api/v1/risk-score HTTP/1.1" 422 Unprocessable Entity
-unknown_seller seller_id=SELLER-042 — using global mean
-INFO:     127.0.0.1:42728 - "POST /api/v1/risk-score HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46336 - "POST /api/v1/risk-score HTTP/1.1" 422 Unprocessable Entity
