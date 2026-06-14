@@ -58,6 +58,13 @@ def _build_quote(fv: FeatureVector, point: float, low: float, high: float,
     low_r = max(0, min(round(low), gross - band))
     high_r = max(round(high), gross + band)
 
+    # Fix 4: a used item should not be quoted above retail. Clamp the upper band to
+    # original_price so the calibrated range stays credible (still >= gross).
+    clamped_high = False
+    if op > 0 and high_r > op:
+        high_r = max(int(round(op)), gross)
+        clamped_high = True
+
     conf = max(0.3, min(0.99, 1 - (high_r - low_r) / max(gross, 1)))
     reasons = [
         f"condition {int(fv.condition_score)}/100",
@@ -65,6 +72,8 @@ def _build_quote(fv: FeatureVector, point: float, low: float, high: float,
         f"age {fv.age_months} months",
         f"Gross ₹{gross} − fee ₹{fee} = you get ₹{net}",
     ]
+    if clamped_high:
+        reasons.append(f"upper estimate capped at retail ₹{int(round(op))} (used item)")
     return PriceQuote(
         gross_price=gross, low=low_r, high=high_r,
         confidence=round(conf, 2), fee=fee, net_payout=net,

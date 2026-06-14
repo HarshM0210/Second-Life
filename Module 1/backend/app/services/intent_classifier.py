@@ -42,6 +42,12 @@ HIGH_PENALTY_025: list[str] = [
     "item defective or not working",
     "moderate damage (cracked casing, significant scratches)",
     "significant damage — contents may be compromised",
+    # Clothing & Footwear heavy-use / condition signals (Fix 1: previously ignored)
+    "worn multiple times",
+    "yes — washed multiple times",
+    "yes — visible stain or noticeable odour",
+    "all tags removed",
+    "significant wear — clearly used outdoors",
 ]
 
 # MEDIUM penalty answers — "not as described" claims (0.15)
@@ -59,6 +65,10 @@ MEDIUM_PENALTY: list[str] = [
     "physical damage on arrival",
     "compatibility issue (wrong model/version)",
     "compatibility issue",
+    # Clothing & Footwear moderate condition signals (Fix 1: previously ignored)
+    "some tags removed",
+    "minor — very faint mark or slight odour",
+    "visible sole wear or scuffing",
 ]
 
 # LOW penalty answers — preference or cosmetic/fit reasons
@@ -112,16 +122,11 @@ class IntentClassifier:
         """
         start_time = time.perf_counter()
 
-        # Primary signal: return_reason answer
-        return_reason = qa_answers.get("return_reason", "").strip().lower()
-
-        # Secondary signals from other answers that may indicate severity
-        functional_status = qa_answers.get("functional_status", "").strip().lower()
-        physical_condition = qa_answers.get("physical_condition", "").strip().lower()
-
-        # Attempt classification from most specific to least specific
+        # Map the full set of condition-bearing Q&A answers to a penalty.
+        # (Fix 1: previously only return_reason/functional_status/physical_condition
+        # were inspected, so clothing damage fields were silently ignored.)
         penalty, penalty_category, unclassified = self._map_to_penalty(
-            return_reason, functional_status, physical_condition, category
+            qa_answers, category
         )
 
         # Ensure we stay within 200ms budget
@@ -170,46 +175,67 @@ class IntentClassifier:
 
     def _map_to_penalty(
         self,
-        return_reason: str,
-        functional_status: str,
-        physical_condition: str,
+        qa_answers: dict[str, str],
         category: str,
     ) -> tuple[float, str, bool]:
-        """Map answer text to penalty value using keyword matching.
+        """Map Q&A answers to a penalty value using keyword matching.
 
-        Uses a "most severe wins" approach: checks all signals and returns
-        the highest penalty found across return_reason, functional_status,
-        and physical_condition.
+        Uses a "most severe wins" approach across **every** condition-bearing
+        field, not just the return reason. The severity cascade is:
+
+            HIGH 0.35  ->  HIGH 0.25  ->  MEDIUM 0.15  ->  LOW 0.10  ->  LOW 0.05
+
+        Reason-type semantics (changed-mind / wrong-size) remain keyed off the
+        return_reason field, so existing single-field behavior is preserved;
+        clothing/footwear condition fields now also contribute to the severe
+        tiers (Fix 1).
 
         Returns:
             Tuple of (penalty_value, penalty_category, unclassified).
         """
-        # Collect all signals to find the most severe match
-        all_fields = [return_reason, functional_status, physical_condition]
+        return_reason = qa_answers.get("return_reason", "").strip().lower()
 
-        # Check HIGH penalty (0.35) — non-functional / completely broken
+        # Every field that can carry condition/severity signal.
+        severity_field_keys = [
+            "return_reason",
+            "functional_status",
+            "physical_condition",
+            "physical_damage",
+            "wear_history",
+            "washing_history",
+            "staining_odour",
+            "tag_status",
+            "sole_condition",
+        ]
+        all_fields = [
+            qa_answers.get(key, "").strip().lower() for key in severity_field_keys
+        ]
+
+        # HIGH penalty (0.35) — non-functional / severely damaged
         for field_val in all_fields:
             if self._matches_any(field_val, HIGH_PENALTY_035):
                 return 0.35, "high", False
 
-        # Check HIGH penalty (0.25) — partially functional
+        # HIGH penalty (0.25) — partially functional / heavy use
         for field_val in all_fields:
             if self._matches_any(field_val, HIGH_PENALTY_025):
                 return 0.25, "high", False
 
-        # Check LOW penalty (0.05) — preference / changed mind
-        if self._matches_any(return_reason, LOW_PENALTY_005):
-            return 0.05, "low", False
+        # MEDIUM penalty (0.15) — not-as-described / moderate condition signals
+        for field_val in all_fields:
+            if self._matches_any(field_val, MEDIUM_PENALTY):
+                return 0.15, "medium", False
 
-        # Check LOW penalty (0.10) — cosmetic / fit / wrong size
+        # LOW penalty (0.10) — cosmetic / fit / wrong size (reason or physical)
         if self._matches_any(return_reason, LOW_PENALTY_010):
             return 0.10, "low", False
 
-        # Check MEDIUM penalty (0.15) — not as described
-        if self._matches_any(return_reason, MEDIUM_PENALTY):
-            return 0.15, "medium", False
+        # LOW penalty (0.05) — preference / changed mind
+        if self._matches_any(return_reason, LOW_PENALTY_005):
+            return 0.05, "low", False
 
-        # Check physical condition for low severity
+        # Physical-condition cosmetic fallback
+        physical_condition = qa_answers.get("physical_condition", "").strip().lower()
         if self._matches_any(physical_condition, LOW_PENALTY_010):
             return 0.10, "low", False
 

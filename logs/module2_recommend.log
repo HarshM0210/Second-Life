@@ -1,0 +1,15 @@
+INFO:     Started server process [590136]
+INFO:     Waiting for application startup.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/134 [00:00<?, ?it/s]Loading weights: 100%|██████████| 134/134 [00:00<00:00, 14469.07it/s]
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     127.0.0.1:57056 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57068 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40202 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40218 - "GET /api/v2/customer-profile/CUST-PRIYA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40234 - "GET /api/v2/customer-profile/CUST-PRIYA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40248 - "GET /recommend?user_id=u-priya&k=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40264 - "GET /recommend?user_id=u-priya&k=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40280 - "GET /recommend?user_id=u-rahul&k=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40292 - "GET /recommend?user_id=u-priya&k=5 HTTP/1.1" 200 OK

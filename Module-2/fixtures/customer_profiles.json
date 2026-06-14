@@ -1,0 +1,25 @@
+[
+  {
+    "customer_id": "CUST-PRIYA",
+    "order_history": [
+      {"order_id": "ORD-P01", "product_id": "Women's Shoes", "category": "Apparel", "subcategory": "Women's Shoes", "brand": "Nike", "purchased_size": "8", "price": 1999.0, "seller_id": "SELLER-042", "status": "returned", "return_reason": "too large", "order_date": "2026-02-10"},
+      {"order_id": "ORD-P02", "product_id": "Women's Shoes", "category": "Apparel", "subcategory": "Women's Shoes", "brand": "Nike", "purchased_size": "9", "price": 2099.0, "seller_id": "SELLER-042", "status": "returned", "return_reason": "too large", "order_date": "2026-03-04"},
+      {"order_id": "ORD-P03", "product_id": "Women's Shoes", "category": "Apparel", "subcategory": "Women's Shoes", "brand": "Nike", "purchased_size": "8", "price": 1899.0, "seller_id": "SELLER-042", "status": "completed", "return_reason": null, "order_date": "2026-04-18"},
+      {"order_id": "ORD-P04", "product_id": "Yoga Mat", "category": "Fitness", "subcategory": "Yoga Mats", "brand": "Decathlon", "purchased_size": null, "price": 599.0, "seller_id": "SELLER-011", "status": "completed", "return_reason": null, "order_date": "2026-05-01"}
+    ]
+  },
+  {
+    "customer_id": "CUST-RAHUL",
+    "order_history": [
+      {"order_id": "ORD-R01", "product_id": "Earphones", "category": "Electronics", "subcategory": "Earphones", "brand": "Boat", "purchased_size": null, "price": 1299.0, "seller_id": "SELLER-077", "status": "completed", "return_reason": null, "order_date": "2026-01-22"},
+      {"order_id": "ORD-R02", "product_id": "Earphones", "category": "Electronics", "subcategory": "Earphones", "brand": "Boat", "purchased_size": null, "price": 1499.0, "seller_id": "SELLER-077", "status": "completed", "return_reason": null, "order_date": "2026-03-15"},
+      {"order_id": "ORD-R03", "product_id": "Coffee Makers", "category": "Home", "subcategory": "Coffee Makers", "brand": "Bialetti", "purchased_size": null, "price": 899.0, "seller_id": "SELLER-201", "status": "completed", "return_reason": null, "order_date": "2026-04-09"}
+    ]
+  },
+  {
+    "customer_id": "CUST-SELLER",
+    "order_history": [
+      {"order_id": "ORD-S01", "product_id": "Coffee Makers", "category": "Home", "subcategory": "Coffee Makers", "brand": "Bialetti", "purchased_size": null, "price": 899.0, "seller_id": "SELLER-201", "status": "completed", "return_reason": null, "order_date": "2026-02-02"}
+    ]
+  }
+]

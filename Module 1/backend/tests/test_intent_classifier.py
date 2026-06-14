@@ -327,3 +327,61 @@ class TestResultStructure:
         qa = {"return_reason": "Changed my mind"}
         result = classifier.classify(qa, "Electronics")
         assert result.penalty_category in ("high", "medium", "low")
+
+
+# ---------------------------------------------------------------------------
+# Clothing condition-field tests (Fix 1 — fields beyond return_reason)
+# ---------------------------------------------------------------------------
+
+
+class TestClothingConditionFields:
+    """The classifier must read clothing/footwear condition fields, not just
+    return_reason. A benign return_reason ('changed my mind') must NOT mask
+    severe condition signals declared in other fields."""
+
+    def test_physical_damage_field_drives_high_penalty(self, classifier):
+        # Maya's case: benign reason, but physical_damage is severe.
+        qa = {
+            "return_reason": "Changed my mind",
+            "physical_damage": "Significant damage (torn, broken fastening)",
+        }
+        result = classifier.classify(qa, "Clothing & Footwear")
+        assert result.return_reason_penalty == 0.35
+        assert result.penalty_category == "high"
+
+    def test_heavy_wear_fields_drive_025(self, classifier):
+        qa = {
+            "return_reason": "Changed my mind",
+            "wear_history": "Worn multiple times",
+            "washing_history": "Yes — washed multiple times",
+            "staining_odour": "Yes — visible stain or noticeable odour",
+            "tag_status": "All tags removed",
+        }
+        result = classifier.classify(qa, "Clothing & Footwear")
+        assert result.return_reason_penalty == 0.25
+        assert result.penalty_category == "high"
+
+    def test_moderate_condition_fields_drive_medium(self, classifier):
+        qa = {
+            "return_reason": "Changed my mind",
+            "tag_status": "Some tags removed",
+            "sole_condition": "Visible sole wear or scuffing",
+        }
+        result = classifier.classify(qa, "Clothing & Footwear")
+        assert result.return_reason_penalty == 0.15
+        assert result.penalty_category == "medium"
+
+    def test_benign_clothing_stays_low(self, classifier):
+        # Priya's case: genuinely near-new — must remain the 0.05 preference tier.
+        qa = {
+            "return_reason": "Changed my mind",
+            "wear_history": "Tried on indoors only — not worn outside",
+            "tag_status": "Yes — all tags attached and intact",
+            "washing_history": "No — not washed",
+            "staining_odour": "No — completely clean",
+            "sole_condition": "Completely clean — no sole wear",
+            "physical_damage": "No damage",
+        }
+        result = classifier.classify(qa, "Clothing & Footwear")
+        assert result.return_reason_penalty == 0.05
+        assert result.penalty_category == "low"

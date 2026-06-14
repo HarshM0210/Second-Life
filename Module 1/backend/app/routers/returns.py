@@ -11,10 +11,12 @@ Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.7, 2.8, 3.4, 5.1, 5.2, 12.1
 
 import json
 import logging
+import os
 import uuid
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
+import cv2
 import numpy as np
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -110,6 +112,36 @@ def _mock_get_order(
         "delivery_date": delivery_date,
         "category": category,
     }
+
+
+def _resolve_images(uris: list[str]) -> tuple[list[np.ndarray], int]:
+    """Decode submitted media URIs into image arrays for the grader.
+
+    Demo-grade media resolution (Fix 2): a URI that points to an existing local
+    file (optionally ``file://``-prefixed) is decoded with OpenCV so the wear /
+    anomaly CV layers see real pixels. URIs that don't resolve to a local file
+    (e.g. ``s3://...`` in tests/demo) fall back to a neutral placeholder.
+
+    Returns ``(image_arrays, real_count)`` where ``real_count`` is how many URIs
+    resolved to genuine decoded images (0 means everything was a placeholder).
+    """
+    images: list[np.ndarray] = []
+    real_count = 0
+    placeholder = np.zeros((224, 224, 3), dtype=np.uint8)
+    for uri in uris:
+        path = uri[7:] if uri.startswith("file://") else uri
+        decoded = None
+        try:
+            if path and os.path.exists(path):
+                decoded = cv2.imread(path)
+        except Exception:  # noqa: BLE001 — never let media decode crash grading
+            decoded = None
+        if decoded is not None and getattr(decoded, "size", 0) > 0:
+            images.append(decoded)
+            real_count += 1
+        else:
+            images.append(placeholder)
+    return images, real_count
 
 
 # ---------------------------------------------------------------------------
@@ -231,6 +263,9 @@ class SubmitReturnRequest(BaseModel):
     image_uris: list[str]
     video_frame_uris: list[str] = Field(default_factory=list)
     catalog_metadata: CatalogMetadata
+    # Connected social accounts for the Social Connect fraud scan. Optional and
+    # defaults to empty (graceful degradation: no accounts → no social penalty).
+    connected_accounts: list[str] = Field(default_factory=list)
 
 
 class SubmitReturnResponse(BaseModel):
@@ -337,12 +372,14 @@ async def submit_return(return_id: str, body: SubmitReturnRequest) -> SubmitRetu
         raise HTTPException(status_code=400, detail="Maximum 5 image URIs allowed")
 
     # ------------------------------------------------------------------
-    # 4. Create placeholder numpy arrays and execute pipeline
+    # 4. Resolve media and execute pipeline
     # ------------------------------------------------------------------
-    # For demo: URIs are accepted but actual processing uses placeholder arrays
-    placeholder_image = np.zeros((224, 224, 3), dtype=np.uint8)
-    images = [placeholder_image for _ in body.image_uris]
-    video_frames = [placeholder_image for _ in body.video_frame_uris]
+    # Fix 2: decode real local images when available; non-local URIs (e.g. s3://)
+    # fall back to a neutral placeholder. Q&A intent still drives condition when
+    # only placeholders are present, so a placeholder no longer masquerades as a
+    # pristine inspection.
+    images, _real_images = _resolve_images(body.image_uris)
+    video_frames, _ = _resolve_images(body.video_frame_uris)
 
     pipeline_input = PipelineInput(
         images=images,
@@ -351,9 +388,9 @@ async def submit_return(return_id: str, body: SubmitReturnRequest) -> SubmitRetu
         category=body.catalog_metadata.category,
         product_value=body.catalog_metadata.original_price,
         customer_id=customer_id,
-        connected_accounts=[],  # Demo: no connected accounts
+        connected_accounts=body.connected_accounts,
         purchase_date=body.catalog_metadata.purchase_date,
-        return_date="2026-01-01",  # Demo placeholder
+        return_date=date.today().isoformat(),  # Fix 3: real ownership-window end
         warranty_remaining_months=body.catalog_metadata.warranty_remaining_months,
     )
 
