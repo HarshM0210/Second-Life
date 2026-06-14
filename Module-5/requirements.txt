@@ -1,0 +1,16 @@
+# Module 5 — P2P Exchange. All LOCAL, no third-party inference API.
+numpy>=1.24
+torch>=2.0                # Phase B: neural quantile-MLP (CPU or CUDA)
+scikit-learn>=1.4         # eval baseline (synthetic quantile-GBM) only
+pandas>=2.0               # eval / determinism tests
+pillow>=10.0              # CLIP image loading (Direct path)
+
+# Service
+fastapi>=0.110
+uvicorn>=0.27
+httpx>=0.27
+pytest>=7.0
+
+# Optional (graceful fallback if absent):
+# sentence-transformers>=2.7   # local CLIP zero-shot condition scoring (Direct path)
+# opencv-python>=4.9           # video frame extraction

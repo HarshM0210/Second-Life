@@ -1,0 +1,82 @@
+[
+  {
+    "sku_id": "SKU-ELEC-001",
+    "category": "electronics",
+    "original_price": 5500,
+    "age_months": 8,
+    "brand_tier": "premium",
+    "has_box": true,
+    "accessories_complete": true,
+    "media_refs": [
+      "fixtures/media/elec_001_front.jpg",
+      "fixtures/media/elec_001_back.jpg"
+    ],
+    "health_card": {
+      "sku_id": "SKU-ELEC-001",
+      "condition": "Excellent",
+      "health_score": 88,
+      "confidence": 0.91,
+      "price": 4200,
+      "original_price": 5500,
+      "is_renewed": true
+    }
+  },
+  {
+    "sku_id": "SKU-BABY-002",
+    "category": "baby",
+    "original_price": 3500,
+    "age_months": 12,
+    "brand_tier": "standard",
+    "has_box": false,
+    "accessories_complete": true,
+    "media_refs": [
+      "fixtures/media/baby_002_photo.jpg"
+    ]
+  },
+  {
+    "sku_id": "SKU-FIT-003",
+    "category": "fitness",
+    "original_price": 7000,
+    "age_months": 6,
+    "brand_tier": "premium",
+    "has_box": true,
+    "accessories_complete": false,
+    "media_refs": [
+      "fixtures/media/fit_003_main.jpg",
+      "fixtures/media/fit_003_detail.jpg"
+    ],
+    "health_card": {
+      "sku_id": "SKU-FIT-003",
+      "condition": "Good",
+      "health_score": 72,
+      "confidence": 0.85,
+      "price": 4900,
+      "original_price": 7000,
+      "is_renewed": false
+    }
+  },
+  {
+    "sku_id": "SKU-KITCH-004",
+    "category": "kitchen",
+    "original_price": 2200,
+    "age_months": 24,
+    "brand_tier": "value",
+    "has_box": false,
+    "accessories_complete": false,
+    "media_refs": [
+      "fixtures/media/kitch_004.jpg"
+    ]
+  },
+  {
+    "sku_id": "SKU-FASH-005",
+    "category": "fashion",
+    "original_price": 4000,
+    "age_months": 3,
+    "brand_tier": "premium",
+    "has_box": true,
+    "accessories_complete": true,
+    "media_refs": [
+      "fixtures/media/fash_005_a.jpg"
+    ]
+  }
+]

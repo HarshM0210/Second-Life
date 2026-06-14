@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ML model caches (kept outside repo, but ignore if anyone points HF cache here)
+.cache/
+*.safetensors
+*.bin
+
+# Regenerable ESCI dataset cache (re-downloads via esci_loader). Keep data/eval/* (results).
+Module-2/data/esci/
+
+# Module 5 — regenerable trained model + synthetic training data (rebuild via `python -m p2p.train`)
+Module-5/models/
+Module-5/data/synthetic/
+
+# Work-defining process docs — internal team coordination, not committed/pushed
+AGENTS.md
+TASKS.md
+CHANGELOG.md
+review.md
+
+# OS / editor
+.DS_Store
+*.swp

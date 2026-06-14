@@ -1,0 +1,16 @@
+# Module 2 — Recommend. All LOCAL, no embedding/multimodal API.
+pytest>=7.0
+numpy>=1.24
+
+# Real local embeddings + cross-encoder rerank
+sentence-transformers>=2.7
+torch>=2.0
+transformers>=4.48          # gte-modernbert-base (ModernBERT arch) + Qwen3-Reranker
+
+# Phase 2.1 offline eval (ESCI dataset)
+datasets>=2.18
+
+# Service
+fastapi>=0.110
+uvicorn>=0.27
+httpx>=0.27

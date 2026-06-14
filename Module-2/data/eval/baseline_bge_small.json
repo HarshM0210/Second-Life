@@ -1,0 +1,11 @@
+{
+  "ndcg@10": 0.4634006296431154,
+  "recall@10": 0.5274929695814011,
+  "mrr": 0.48987250646416314,
+  "num_queries": 176,
+  "avg_candidates": 55.33522727272727,
+  "model": "BAAI/bge-small-en-v1.5",
+  "dim": 384,
+  "num_negatives": 50,
+  "dataset": "tasksource/esci test (US, small_version, 500q) + 50 pooled negatives/query"
+}

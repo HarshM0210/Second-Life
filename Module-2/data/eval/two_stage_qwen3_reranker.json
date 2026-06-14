@@ -1,0 +1,13 @@
+{
+  "ndcg@10": 0.4655659686218106,
+  "recall@10": 0.49673753665689147,
+  "mrr": 0.4934776790667735,
+  "num_queries": 120,
+  "avg_candidates": 56.108333333333334,
+  "model": "Alibaba-NLP/gte-modernbert-base + Qwen/Qwen3-Reranker-0.6B",
+  "pipeline": "embed -> retrieve -> cross-encoder rerank top-20 -> business rerank",
+  "num_negatives": 50,
+  "rerank_top_n": 20,
+  "dataset": "tasksource/esci test (US, small_version, 500q) + 50 pooled negatives/query (120-query cap for CE cost)",
+  "retrieval_only_ndcg": 0.4659623861177506
+}
