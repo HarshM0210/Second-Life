@@ -1,13 +1,0 @@
-INFO:     Started server process [55325]
-INFO:     Waiting for application startup.
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Loading weights:   0%|          | 0/134 [00:00<?, ?it/s]Loading weights: 100%|██████████| 134/134 [00:00<00:00, 12723.54it/s]
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
-INFO:     127.0.0.1:40416 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51724 - "GET /recommend?user_id=u-priya&k=8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51712 - "GET /recommend?user_id=u-priya&k=8 HTTP/1.1" 200 OK
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [55325]

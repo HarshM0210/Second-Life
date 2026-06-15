@@ -30,3 +30,6 @@ Flaws.md
 # OS / editor
 .DS_Store
 *.swp
+
+.pids.json/
+logs/
