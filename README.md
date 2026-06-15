@@ -319,38 +319,48 @@ Q8. Hygiene: No concerns / Cleaned and sanitised / May have hygiene issues
 - Used on skin/body → block resell entirely → `donate` (score > 50) or `recycle`
 - Safety concern flagged → `manual_review` (bypasses all disposition gates)
 
-### AI Grader — Two Options (pick one)
+### AI Grader — Concurrent Components
 
-**Shared front end (both options):** unsupervised anomaly detection — PatchCore or FastFlow (`anomalib` library) — trained only on defect-free reference images per category. Outputs pixel-level anomaly heatmap + anomaly score. No labeled defect dataset needed.
+Three components run concurrently via `asyncio.gather`. A **local computer vision pipeline** inspects submitted images for anomalies, defects, and wear patterns, while a **structured Q&A flow** captures the customer's self-reported condition. Both run in parallel and their results are combined to produce the final health score.
 
-**Health score formula (Option B):**
+**Health score formula:**
 
 ```
-health_score = 100 − (w1·anomaly_severity        # anomalib heatmap
+health_score = 100 − (w1·anomaly_severity        # anomaly detector (heuristic or DINOv2)
                     +  w2·defect_penalty          # YOLOv9/ViT (optional)
                     +  w3·return_reason_penalty   # Q&A intent classifier
                     +  w4·wear_detection_penalty) # CV wear analysis on submitted images
 ```
 
-#### Option A — VLM-augmented 🟡
+A **cross-validation layer** takes `max(intent_penalty, wear_penalty)` as the authoritative wear signal, ensuring that self-serving Q&A answers cannot override physical evidence captured by the CV pipeline.
 
-Local open-weights VLM (Qwen2.5-VL-7B, video-capable, or distilled 2–4B). Takes frames + anomaly heatmap + Q&A answers → Health Card JSON + generated justification. Quantize to 4-bit GGUF/ONNX.
+#### Anomaly Detector — Two Backends
 
-- **Pros:** open-ended reasoning, richest justification text, maximum demo sparkle
-- **Cons:** needs GPU; fiddly under time pressure; can hallucinate; highest failure risk
-- **Use when:** stable GPU instance available early, time to spare
+The anomaly detector can run on a cutting-edge, **training-free DINOv2 backend** (ViT-S/14 with registers) that compares image patch features against a per-category "known-good" memory bank and **ensembles pessimistically** with the OpenCV heuristic:
 
-#### Option B — No-VLM classical 🟢
+```
+final_severity = max(model_severity, heuristic_severity)
+```
 
-- `anomaly_severity` — anomalib score (always available, no labels)
+The DINOv2 backend is **opt-in via `ANOMALY_BACKEND=dinov2`**, with **graceful fallback** to the OpenCV heuristic when `torch`/weights are unavailable. Per-category reference ("known-good") images live in `storage/dinov2/refs/<category>/`.
+
+| Backend            | How it works                                                                       | Requirements                  |
+| ------------------ | ---------------------------------------------------------------------------------- | ----------------------------- |
+| OpenCV heuristic   | Classical CV severity estimate (always available)                                  | None                          |
+| DINOv2 (opt-in)    | ViT-S/14 + registers patch features vs per-category known-good memory bank         | `torch` + weights; else falls back |
+
+> The two backends are not mutually exclusive: when DINOv2 is enabled, both run and the final severity is the pessimistic `max` of the two.
+
+#### Score components (classical, CPU-fine, sub-2s)
+
+- `anomaly_severity` — OpenCV heuristic, optionally ensembled with the DINOv2 backend (always available, no labels)
 - `defect_penalty` — optional YOLOv9/ViT defect classifier (scratch/crack/dent/stain); skip if no labeled dataset
 - `return_reason_penalty` — scikit-learn logistic regression or keyword map on Q&A answers
 - `wear_detection_penalty` — CV layer detecting sole wear, fabric stress, stains, tag condition
 - Justification: template engine (`"{condition}. Detected: {defect_list}. {anomaly_phrase}. Functional check: {pass/fail}. Warranty: {n} months remaining."`)
 - **Pros:** CPU-fine; sub-2s; fully explainable (score-breakdown bar); never crashes demo
-- **Use when:** lowest-risk path. **This is the recommended default.**
 
-> **Leanest path (zero labels, zero GPU):** anomalib score + Q&A keyword classifier + wear penalty + template justification.
+> **Leanest path (zero labels, zero GPU):** heuristic anomaly score + Q&A keyword classifier + wear penalty + template justification. Enable `ANOMALY_BACKEND=dinov2` for the stronger, training-free DINOv2 anomaly signal when `torch`/weights are present.
 
 ### Social Connect Fraud Layer
 
@@ -401,7 +411,7 @@ Amazon never explicitly accuses. The offer is a carrot, not a stick. Either path
 | 5        | total_processing_cost ≥ product_value                      | `return_to_seller`                 | Economic Viability |
 | 5        | unknown category                                           | `manual_review`                    | Economic Viability |
 | 6        | score > 90                                                 | `resell`                           | Condition Routing  |
-| 6        | score > 70                                                 | `refurbish`                        | Condition Routing  |
+| 6        | score > 70 (Electronics only)                              | `refurbish`                        | Condition Routing  |
 | 6        | score > 50                                                 | `donate`                           | Condition Routing  |
 | 6        | score ≤ 50                                                 | `recycle`                          | Condition Routing  |
 
@@ -412,7 +422,7 @@ Amazon never explicitly accuses. The offer is a carrot, not a stick. Either path
 - **Safety Hold** — Overrides everything. Items with safety risks or unwiped electronics go to manual review regardless of condition or value.
 - **Category Override** — Category-specific rules that bypass generic scoring (food hygiene, skin-contact items, etc.).
 - **Economic Viability** — Checks whether the cost to process the item (logistics + inspection + refurb + storage) is justified by its market value. If not, the item is returned to the seller rather than processed at a loss.
-- **Condition Routing** — Items that clear the economic check are routed based on their AI health score (0–100): near-new items resell, recoverable items refurbish, usable-but-not-sellable items donate, end-of-life items recycle.
+- **Condition Routing** — Items that clear the economic check are routed based on their AI health score (0–100): items above 90 are marked for **resell**, items above 70 are marked for **refurbishment** (Electronics only), items above 50 for **donation**, and items scoring 50 or below for **recycling**.
 
 ### Error Handling & Graceful Degradation
 
@@ -442,6 +452,7 @@ Base URL: `http://localhost:8000` | Prefix: `/api/returns`
 | `STORAGE_BASE_PATH`            | `storage/`          | Local media root                                  |
 | `STORAGE_URI_PREFIX`           | `s3://second-life/` | URI prefix for stored files                       |
 | `ANOMALY_MODEL_BASE_PATH`      | `models/`           | PatchCore model directory                         |
+| `ANOMALY_BACKEND`              | `heuristic`         | Anomaly backend: `heuristic` or `dinov2` (DINOv2 ViT-S/14 w/ registers; falls back to heuristic if torch/weights missing) |
 | `ANOMALY_DEMO_MODE`            | `true`              | If true, simulates anomaly with OpenCV heuristics |
 | `ANOMALY_INFERENCE_TIMEOUT_MS` | `1500`              | Anomaly detection timeout                         |
 

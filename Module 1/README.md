@@ -423,7 +423,7 @@ Priority order (first match wins):
 |    5     | Gate A: economics               | `return_to_seller`    | `A`                 | total_processing_cost < product_value                                                                                                                |
 |    5     | Gate A: unknown category        | `manual_review`       | `A`                 | category not in cost_lookup table                                                                                                                    |
 |    6     | Gate B: score > 90              | `resell`              | `B`                 | —                                                                                                                                                    |
-|    6     | Gate B: score > 70              | `refurbish`           | `B`                 | —                                                                                                                                                    |
+|    6     | Gate B: score > 70 (Electronics) | `refurbish`          | `B`                 | Electronics only                                                                                                                                     |
 |    6     | Gate B: score > 50              | `donate`              | `B`                 | —                                                                                                                                                    |
 |    6     | Gate B: score ≤ 50              | `recycle`             | `B`                 | —                                                                                                                                                    |
 |    6     | Gate B: score unavailable       | `recycle`             | `B`                 | flag: `health_score_unavailable`                                                                                                                     |
@@ -465,6 +465,44 @@ Health Card Assembler → HealthCard
 ```
 
 **Total budget**: 2000ms. **Component hard timeout**: 5000ms each.
+
+---
+
+## Grading Pipeline & Anomaly Backends
+
+Three components run concurrently via `asyncio.gather`. A local computer vision pipeline inspects submitted images for **anomalies, defects, and wear patterns**, while a structured Q&A flow captures the customer's self-reported condition. Both run in parallel and their results are combined to produce the final health score:
+
+```
+health_score = 100 − (w1·anomaly_severity + w2·defect_penalty + w3·return_reason_penalty + w4·wear_detection_penalty)
+```
+
+A **cross-validation layer** takes `max(intent_penalty, wear_penalty)` as the authoritative wear signal, ensuring that self-serving Q&A answers cannot override physical evidence from the CV pipeline. **Total pipeline budget: 2000ms.**
+
+### Anomaly Detector Backends
+
+The anomaly detector supports two backends, selected via the `ANOMALY_BACKEND` environment variable:
+
+| Backend            | Description                                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------------------- |
+| `heuristic` (default) | Classical OpenCV severity estimate. Always available, zero dependencies.                             |
+| `dinov2` (opt-in)  | Cutting-edge, **training-free** DINOv2 backend (**ViT-S/14 with registers**) that compares image patch features against a per-category **"known-good" memory bank**. |
+
+When `dinov2` is enabled, it **ensembles pessimistically** with the OpenCV heuristic:
+
+```
+final_severity = max(model_severity, heuristic_severity)
+```
+
+The DINOv2 backend is **opt-in** (`ANOMALY_BACKEND=dinov2`) and **gracefully falls back** to the heuristic when `torch`/weights are unavailable, so the pipeline never crashes. Per-category reference ("known-good") images are stored under `storage/dinov2/refs/<category>/`.
+
+### Condition Routing Gate
+
+Once the score is computed, it is routed through the Condition Routing gate:
+
+- Score **above 90** → `resell`
+- Score **above 70** → `refurbish` (**Electronics only**)
+- Score **above 50** → `donate`
+- Score **50 or below** → `recycle`
 
 ---
 
@@ -534,6 +572,7 @@ async def get_health_card(return_id: str) -> dict | None:
 | `STORAGE_BASE_PATH`            | `storage/`          | Local media storage root                                    |
 | `STORAGE_URI_PREFIX`           | `s3://second-life/` | URI prefix for stored files                                 |
 | `ANOMALY_MODEL_BASE_PATH`      | `models/`           | Directory for PatchCore model files                         |
+| `ANOMALY_BACKEND`              | `heuristic`         | Anomaly detector backend: `heuristic` (OpenCV) or `dinov2` (training-free DINOv2 ViT-S/14 with registers). Falls back to `heuristic` if `torch`/weights are unavailable. |
 | `ANOMALY_DEMO_MODE`            | `true`              | If true, simulates anomaly detection with OpenCV heuristics |
 | `ANOMALY_INFERENCE_TIMEOUT_MS` | `1500`              | Anomaly detection timeout in milliseconds                   |
 
