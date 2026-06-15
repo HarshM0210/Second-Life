@@ -133,15 +133,6 @@ export interface PickupJob {
   [k: string]: unknown;
 }
 
-export interface ServiceStatus {
-  up: boolean;
-  detail?: unknown;
-  status_code?: number;
-  error?: string;
-}
-
-export type ServicesResponse = Record<string, ServiceStatus | boolean>;
-
 // Pipeline trace (gateway /pipeline/return)
 export interface PipelineStep {
   step: string;

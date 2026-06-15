@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { skuToProduct } from "@/lib/catalog";
 import { Price, Stars, RenewedBadge } from "@/components/ui";
 import { getRiskScore } from "@/api/client";
 import type { RiskResponse } from "@/types";
 import { useSession } from "@/state/session";
+import { useCart } from "@/state/cart";
 
 function RiskBanner({ risk }: { risk: RiskResponse }) {
   if (risk.taxonomy_miss || !risk.intervention_copy) return null;
@@ -30,14 +31,21 @@ export default function ProductDetail() {
   const { sku } = useParams();
   const product = sku ? skuToProduct(sku) : undefined;
   const { persona } = useSession();
-  const navigate = useNavigate();
+  const { addItem } = useCart();
   const [risk, setRisk] = useState<RiskResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [added, setAdded] = useState(false);
   const dwellStart = useRef(Date.now());
 
-  useEffect(() => { dwellStart.current = Date.now(); setRisk(null); }, [sku]);
+  useEffect(() => { dwellStart.current = Date.now(); setRisk(null); setAdded(false); }, [sku]);
 
   if (!product) return <div className="card p-6">Product not found. <Link className="link-amz" to="/">Back to shop</Link></div>;
+
+  const addToCart = () => {
+    addItem(product);
+    setAdded(true);
+    void checkRisk(false); // still surface Module 3 return-risk guidance
+  };
 
   const checkRisk = async (isBuyNow: boolean) => {
     setLoading(true);
@@ -97,21 +105,21 @@ export default function ProductDetail() {
           <Price value={product.price} original={product.original_price} />
           <div className="text-sm text-amz-green">In stock</div>
           <button className="btn-amz w-full" disabled={loading}
-            onClick={() => checkRisk(false)}>
+            onClick={addToCart}>
             {loading ? "Checking fit…" : "Add to Cart"}
           </button>
           <button className="btn-amz-orange w-full" disabled={loading}
             onClick={() => checkRisk(true)}>
             Buy Now
           </button>
+          {added && (
+            <div className="text-xs text-amz-green">
+              ✓ Added to cart · <Link to="/cart" className="link-amz">View cart</Link>
+            </div>
+          )}
           <div className="text-[11px] text-gray-500">
             Clicking runs Module 3 return-risk scoring (dwell-aware) before checkout.
           </div>
-          <hr />
-          <button className="btn-ghost w-full"
-            onClick={() => navigate(`/returns/${product.sku_id}`)}>
-            Return / Resell this item
-          </button>
         </div>
       </div>
     </div>

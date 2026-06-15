@@ -16,13 +16,14 @@ export default function Shop() {
       <div className="card overflow-hidden">
         <div className="bg-gradient-to-r from-amz-navy to-amz-slate text-white p-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">The Renewed Store</h1>
+            <h1 className="text-2xl font-bold">Second Life — shop new, buy renewed, waste nothing</h1>
             <p className="text-gray-300 text-sm mt-1 max-w-xl">
-              Every returned item is graded by AI, given a Product Health Card, and routed to its
-              best second life. Buy Renewed, earn Green Coin.
+              Your everyday store with a conscience. Buy brand-new items just like always —
+              or grab Certified Renewed returns that are AI-graded, health-scored, and up to 60% off.
+              Every order earns Green Coin and gives a great product a second life. 🌍
             </p>
           </div>
-          <div className="hidden md:block text-6xl">♻️</div>
+          <div className="hidden md:block text-6xl">🛍️</div>
         </div>
       </div>
 

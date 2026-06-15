@@ -1,6 +1,7 @@
 import { Outlet, Link, useNavigate, NavLink } from "react-router-dom";
 import { useState } from "react";
 import { useSession } from "@/state/session";
+import { useCart } from "@/state/cart";
 import ImpactTicker from "@/components/ImpactTicker";
 
 function CartIcon() {
@@ -15,6 +16,7 @@ function CartIcon() {
 
 export default function Layout() {
   const { persona, personas, setPersonaById } = useSession();
+  const { count } = useCart();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
 
@@ -47,13 +49,10 @@ export default function Layout() {
             className="flex flex-1 max-w-3xl rounded-md overflow-hidden"
             onSubmit={(e) => { e.preventDefault(); navigate(`/?q=${encodeURIComponent(q)}`); }}
           >
-            <span className="bg-gray-100 text-gray-700 text-xs px-3 flex items-center rounded-l-md border-r border-gray-300">
-              All
-            </span>
             <input
               value={q} onChange={(e) => setQ(e.target.value)}
               placeholder="Search Second Life — new & Renewed"
-              className="flex-1 px-3 py-2 text-sm text-black outline-none"
+              className="flex-1 px-3 py-2 text-sm text-black outline-none rounded-l-md"
             />
             <button className="bg-amz-orange hover:bg-amz-yellowDark px-4 flex items-center" aria-label="Search">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f1111" strokeWidth="2">
@@ -83,8 +82,19 @@ export default function Layout() {
             <div className="font-bold text-amz-orange">Wallet</div>
           </Link>
 
-          <Link to="/recommended" className="flex items-end px-2 hover:outline hover:outline-1 hover:outline-white/40 rounded" aria-label="Cart">
+          {/* Account: sign in / sign up */}
+          <div className="text-xs leading-tight px-2">
+            <Link to="/signin" className="block text-gray-300 hover:text-white">Sign In</Link>
+            <Link to="/signup" className="block font-bold hover:underline">Sign Up</Link>
+          </div>
+
+          <Link to="/cart" className="relative flex items-end px-2 hover:outline hover:outline-1 hover:outline-white/40 rounded" aria-label="Cart">
             <CartIcon />
+            {count > 0 && (
+              <span className="absolute -top-0.5 left-4 bg-amz-orange text-[#0f1111] text-[11px] font-bold rounded-full px-1.5 leading-tight">
+                {count}
+              </span>
+            )}
             <span className="text-sm font-bold mb-1">Cart</span>
           </Link>
         </div>
@@ -92,18 +102,10 @@ export default function Layout() {
         {/* Secondary slate nav */}
         <nav className="bg-amz-slate text-white text-sm">
           <div className="flex items-center gap-1 px-3 py-1.5 overflow-x-auto whitespace-nowrap">
-            <span className="px-2 py-1 font-medium flex items-center gap-1">☰ All</span>
             <NavLink to="/" end className={navLink}>Shop</NavLink>
             <NavLink to="/recommended" className={navLink}>For You</NavLink>
-            <NavLink to="/returns" className={navLink}>Returns &amp; Resell</NavLink>
+            <NavLink to="/returns" className={navLink}>My Orders</NavLink>
             <NavLink to="/wallet" className={navLink}>Green Coin</NavLink>
-            <NavLink to="/seller" className={navLink}>Seller Hub</NavLink>
-            <NavLink to="/ops" className={navLink}>
-              <span className="text-amz-orange">● </span>Ops Console
-            </NavLink>
-            <span className="ml-auto text-amz-yellow font-medium hidden md:block">
-              The Intelligent Bridge for Returns
-            </span>
           </div>
         </nav>
       </header>
@@ -115,36 +117,26 @@ export default function Layout() {
       </main>
 
       <footer className="bg-amz-slate text-gray-300 text-xs">
-        <div className="bg-amz-navy text-center py-3 text-sm text-white hover:underline cursor-pointer"
-             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-          Back to top
-        </div>
-        <div className="max-w-[1000px] mx-auto px-4 py-6 grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="max-w-[1000px] mx-auto px-4 py-6 grid grid-cols-1 sm:grid-cols-3 gap-8 items-start text-left">
           <div>
             <div className="font-bold text-white mb-2">The Intelligent Bridge</div>
             <p>AI grading, smart routing, P2P resale, and Green Coin — every returned item gets a second life.</p>
-          </div>
-          <div>
-            <div className="font-bold text-white mb-2">Modules</div>
-            <ul className="space-y-1">
-              <li>Grading &amp; Fraud</li><li>Recommend</li><li>Return Prevention</li>
-              <li>Green Coin</li><li>P2P Exchange</li>
-            </ul>
           </div>
           <div>
             <div className="font-bold text-white mb-2">Sustainability</div>
             <ul className="space-y-1"><li>CO₂e Impact</li><li>Green Credits</li><li>Renewed Store</li></ul>
           </div>
           <div>
-            <div className="font-bold text-white mb-2">Demo</div>
+            <div className="font-bold text-white mb-2">Created by</div>
             <ul className="space-y-1">
-              <li><Link className="hover:underline" to="/ops">Ops Console</Link></li>
-              <li><Link className="hover:underline" to="/returns">Start a return</Link></li>
+              <li>Harsh Mishra</li>
+              <li>Chinmay Bhardwaj</li>
+              <li>Kaushal Sharma</li>
             </ul>
           </div>
         </div>
         <div className="text-center py-4 border-t border-white/10">
-          Second Life Commerce · Hackathon prototype · single-origin via gateway :8080
+          Second Life Commerce · Built by Team Second Life · Hackathon prototype
         </div>
       </footer>
     </div>

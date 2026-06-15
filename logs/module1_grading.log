@@ -1,19 +1,9 @@
-INFO:     Started server process [622715]
+INFO:     Started server process [55324]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:55896 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47890 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47900 - "POST /api/returns/initiate HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47910 - "POST /api/returns/RET-12ef2083a293/submit HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47920 - "POST /api/returns/initiate HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47922 - "POST /api/returns/RET-a852dca3d7c7/submit HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47938 - "POST /api/returns/initiate HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47946 - "POST /api/returns/RET-0e82626dfaf2/submit HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47948 - "POST /api/returns/initiate HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47964 - "POST /api/returns/RET-77c15ab3c28c/submit HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47974 - "POST /api/returns/RET-77c15ab3c28c/p2p-choice HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35992 - "GET /health HTTP/1.1" 200 OK
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [622715]
+INFO:     Finished server process [55324]

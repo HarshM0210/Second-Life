@@ -1,17 +1,13 @@
 import axios from "axios";
 import type {
   Feed, ImpactSummary, InitiateResponse, PickupJob, PriceQuote,
-  PipelineResult, Reward, RiskResponse, ServicesResponse, SubmitResponse, Wallet,
+  PipelineResult, Reward, RiskResponse, SubmitResponse, Wallet,
 } from "@/types";
 
 // Single origin: everything is relative and proxied to the gateway (:8080).
 const API_BASE = import.meta.env.VITE_API_BASE ?? "";
 
 const http = axios.create({ baseURL: API_BASE, timeout: 40000 });
-
-// --- Health / ops ---
-export const getServices = () =>
-  http.get<ServicesResponse>("/services").then((r) => r.data);
 
 // --- Module 4: Green Coin ---
 export const getWallet = (userId: string) =>
@@ -42,9 +38,6 @@ export const getRiskScore = (body: {
   product_review_rating?: number;
 }) => http.post<RiskResponse>("/api/risk-score", body).then((r) => r.data);
 
-export const getFeatureImportance = () =>
-  http.get<Record<string, number>>("/api/feature-importance").then((r) => r.data);
-
 // --- Module 1: Returns flow ---
 export const initiateReturn = (body: {
   order_id: string; product_id: string; customer_id: string;
@@ -72,9 +65,3 @@ export const p2pAccept = (skuId: string) =>
 // --- Gateway orchestrated pipeline ---
 export const runPipelineReturn = (body: Record<string, unknown>) =>
   http.post<PipelineResult>("/pipeline/return", body).then((r) => r.data);
-
-export const getScenarios = () =>
-  http.get<{ name: string; label: string }[]>("/api/scenarios").then((r) => r.data);
-
-export const runScenario = (name: string) =>
-  http.post<PipelineResult>(`/api/scenario/${name}`).then((r) => r.data);

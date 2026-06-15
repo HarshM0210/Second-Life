@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import type { Product } from "@/lib/catalog";
 import { Price, RenewedBadge, Stars } from "@/components/ui";
+import { useCart } from "@/state/cart";
 
 export default function ProductCard({ product, reasons }: { product: Product; reasons?: string[] }) {
+  const { addItem } = useCart();
   return (
     <div className="card p-3 flex flex-col hover:shadow-lg transition-shadow">
       <Link to={`/product/${product.sku_id}`} className="block">
@@ -31,9 +33,11 @@ export default function ProductCard({ product, reasons }: { product: Product; re
         </ul>
       )}
       <div className="mt-auto pt-2 flex gap-2">
-        <Link to={`/product/${product.sku_id}`} className="btn-amz text-center flex-1">View</Link>
-        <Link to={`/returns/${product.sku_id}`} className="btn-ghost text-center"
-              title="Start a return / resell">Return</Link>
+        <Link to={`/product/${product.sku_id}`} className="btn-ghost text-center flex-1">View</Link>
+        <button onClick={() => addItem(product)} className="btn-amz flex-1"
+          aria-label={`Add ${product.title} to cart`}>
+          Add to cart
+        </button>
       </div>
     </div>
   );

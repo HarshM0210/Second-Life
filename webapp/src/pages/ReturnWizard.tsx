@@ -11,16 +11,25 @@ import { Price } from "@/components/ui";
 
 type Step = "select" | "questions" | "grading" | "result";
 
+// "My Orders" shows exactly three recent orders — one per category
+// (Clothing & Footwear, Electronics, Other) — that can be returned/resold.
+const ORDER_CATEGORIES = ["Clothing & Footwear", "Electronics", "Other"];
+const ORDERS: Product[] = ORDER_CATEGORIES
+  .map((cat) => CATALOG.find((p) => !p.renewed && p.category === cat))
+  .filter((p): p is Product => Boolean(p));
+
 export default function ReturnWizard() {
   const { sku } = useParams();
   const { persona } = useSession();
   const [product, setProduct] = useState<Product>(
-    (sku && skuToProduct(sku)) || CATALOG[0]);
+    (sku && skuToProduct(sku)) || ORDERS[0]);
   const [step, setStep] = useState<Step>("select");
   const [returnId, setReturnId] = useState<string>("");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [connected, setConnected] = useState(false);
+  const [images, setImages] = useState<File[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [video, setVideo] = useState<File | null>(null);
   const [result, setResult] = useState<SubmitResponse | null>(null);
   const [quote, setQuote] = useState<PriceQuote | null>(null);
   const [pickup, setPickup] = useState<PickupJob | null>(null);
@@ -32,8 +41,17 @@ export default function ReturnWizard() {
     if (sku) { const p = skuToProduct(sku); if (p) setProduct(p); }
   }, [sku]);
 
+  // Create preview object URLs once per selection and revoke them on change/unmount
+  // so we don't leak blob URLs on every render.
+  useEffect(() => {
+    const urls = images.map((f) => URL.createObjectURL(f));
+    setImageUrls(urls);
+    return () => urls.forEach((u) => URL.revokeObjectURL(u));
+  }, [images]);
+
   const reset = () => {
     setStep("select"); setReturnId(""); setQuestions([]); setAnswers({});
+    setImages([]); setVideo(null);
     setResult(null); setQuote(null); setPickup(null); setChoice("pending"); setError("");
   };
 
@@ -61,16 +79,23 @@ export default function ReturnWizard() {
   const submit = async () => {
     setBusy(true); setError(""); setStep("grading");
     try {
+      // No storage backend in the prototype: derive stable refs from the chosen
+      // files so the grader receives the customer-provided media.
+      const imageUris = images.length
+        ? images.map((f) => `upload://images/${f.name}`)
+        : ["s3://uploads/item.jpg"];
+      const videoUris = video ? [`upload://video/${video.name}`] : [];
       const res = await submitReturn(returnId, {
         qa_answers: answers,
-        image_uris: ["s3://uploads/item.jpg"],
+        image_uris: imageUris,
+        video_frame_uris: videoUris,
         catalog_metadata: {
           category: product.category,
           original_price: product.price,
           purchase_date: "2026-05-20",
           warranty_remaining_months: product.category === "Electronics" ? 6 : 0,
         },
-        connected_accounts: connected ? ["instagram", "facebook"] : [],
+        connected_accounts: [],
       });
       setResult(res);
       setStep("result");
@@ -133,7 +158,7 @@ export default function ReturnWizard() {
             grade it with AI, and route it to its best second life.
           </p>
           <div className="grid sm:grid-cols-2 gap-2">
-            {CATALOG.filter((p) => !p.renewed).map((p) => (
+            {ORDERS.map((p) => (
               <button key={p.sku_id}
                 onClick={() => setProduct(p)}
                 className={`text-left card p-3 flex items-center gap-3 border-2 ${
@@ -147,10 +172,6 @@ export default function ReturnWizard() {
               </button>
             ))}
           </div>
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" checked={connected} onChange={(e) => setConnected(e.target.checked)} />
-            Social Connect linked (enables wardrobing fraud check for Clothing &amp; Footwear)
-          </label>
           <button className="btn-amz-orange" onClick={start} disabled={busy}>
             {busy ? "Starting…" : "Start return"}
           </button>
@@ -180,6 +201,48 @@ export default function ReturnWizard() {
               </div>
             ))}
           </div>
+
+          {/* Images & video for AI grading */}
+          <div className="space-y-3 border-t border-gray-100 pt-4">
+            <div>
+              <div className="text-sm font-medium mb-1">Add photos of the item</div>
+              <p className="text-xs text-gray-500 mb-2">
+                Clear images of the front, back, and any defects help the AI grader assess condition accurately.
+              </p>
+              <input
+                type="file" accept="image/*" multiple
+                onChange={(e) => setImages(Array.from(e.target.files ?? []))}
+                className="block text-sm text-gray-700 file:mr-3 file:rounded-full file:border file:border-gray-300
+                           file:bg-white file:px-3 file:py-1.5 file:text-sm hover:file:bg-gray-50"
+              />
+              {images.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {images.map((f, i) => (
+                    <div key={i} className="w-16 h-16 rounded border border-gray-200 overflow-hidden bg-gray-50">
+                      <img src={imageUrls[i]} alt={f.name} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="text-sm font-medium mb-1">Add a short video (optional)</div>
+              <p className="text-xs text-gray-500 mb-2">
+                A quick 360° video lets the grader detect wear and verify authenticity.
+              </p>
+              <input
+                type="file" accept="video/*"
+                onChange={(e) => setVideo(e.target.files?.[0] ?? null)}
+                className="block text-sm text-gray-700 file:mr-3 file:rounded-full file:border file:border-gray-300
+                           file:bg-white file:px-3 file:py-1.5 file:text-sm hover:file:bg-gray-50"
+              />
+              {video && (
+                <div className="mt-2 text-xs text-amz-green">✓ {video.name} attached</div>
+              )}
+            </div>
+          </div>
+
           <div className="flex gap-2">
             <button className="btn-ghost" onClick={() => setStep("select")}>Back</button>
             <button className="btn-amz-orange" onClick={submit} disabled={busy}>
