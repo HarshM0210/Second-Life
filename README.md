@@ -11,7 +11,7 @@
 **Tool:** Kiro (mandatory AI IDE, kiro.dev)  
 **Stack:** AWS Free Tier + local-first AI (no third-party multimodal API calls, a hard constraint and a pitch point)
 
-### Judging Rubric (optimize for all four)
+### Judging Rubric
 
 | Criterion                     | How we address it                                                                             |
 | ----------------------------- | --------------------------------------------------------------------------------------------- |
@@ -992,7 +992,7 @@ P2P_WARM_CLIP=1 uvicorn ...  # pre-warm CLIP at startup
 
 ---
 
-## Suggested Demo Build Order (48h)
+## Suggested Demo Build Order
 
 1. **Module 1 end-to-end** — return flow (Q&A + image + video) → Social Connect fraud check (parallel) → local grader → Health Card → fraud branch (P2P offer) or normal routing → disposition. Tells the whole story, shows real AI, hits the <2s target, demonstrates wardrobing fraud catch. _Build first, protect at all costs._
 2. **Module 5 P2P** — small surface area, directly answers Rahul persona, strong narrative payoff.
@@ -1041,7 +1041,7 @@ After 200 auto-graded returns: seller dashboard shows `4,200 kg CO₂e avoided �
 
 ---
 
-## Demo-to-Production Gaps (state honestly — feeds Futuristic Vision score)
+## Demo-to-Production Gaps
 
 - Local grader → larger fine-tuned VLM + confidence calibration; low-confidence items fall back to human inspection
 - Routing thresholds (90/70/50) are starting heuristics; production learns them from realized recovery value — a **delayed-reward decision problem**, not a static classifier (bandit/RL upgrade)
