@@ -1,4 +1,4 @@
-# Module 4 — Green Coin: Technical Documentation
+# Module 4 — Green Coins
 
 Complete reference for the **Sustainability Credits ("Green Coin")** service.
 For a quick start, see [`../README.md`](../README.md). For the product
@@ -31,8 +31,8 @@ Green Coin is the **demand-side flywheel** of Second Life commerce. Module 1
 grades returned items and routes them into the Renewed supply pool; Green Coin
 creates the demand that clears that pool.
 
-Three economic benefits stack, and they are the answer to *"why does Amazon give
-coins away?"*:
+Three economic benefits stack, and they are the answer to _"why does Amazon give
+coins away?"_:
 
 1. **Reverse-logistics savings** — rewarding a local disposition (donate / P2P /
    keep) avoids a ₹400–600 truck journey; Amazon issues tens of rupees in coins
@@ -135,18 +135,18 @@ sum of `co2e_kg` over `earned` events. Nothing is ever updated in place.
 
 ### `coin_events`
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | TEXT (PK) | uuid4 |
-| `user_id` | TEXT | indexed |
-| `event_type` | TEXT | `earned` \| `redeemed` \| `expired` \| `badge_earned` (CHECK constrained) |
-| `amount` | INTEGER | `+` earned, `−` redeemed/expired, `0` for badge_earned |
-| `source` | TEXT | e.g. `disposition:DONATE_LOCAL`, `bonus:chose_renewed`, `reward:prime_1month`, `badge:seed_saver` |
-| `co2e_kg` | REAL | kg CO₂e avoided (0.0 for non-earn events) |
-| `streak_day` | INTEGER | streak at time of the event |
-| `badge` | TEXT (nullable) | badge slug if this event unlocked one |
-| `item_id` | TEXT (nullable) | order/item reference |
-| `created_at` | DATETIME | UTC, server-defaulted |
+| Column       | Type            | Notes                                                                                             |
+| ------------ | --------------- | ------------------------------------------------------------------------------------------------- |
+| `id`         | TEXT (PK)       | uuid4                                                                                             |
+| `user_id`    | TEXT            | indexed                                                                                           |
+| `event_type` | TEXT            | `earned` \| `redeemed` \| `expired` \| `badge_earned` (CHECK constrained)                         |
+| `amount`     | INTEGER         | `+` earned, `−` redeemed/expired, `0` for badge_earned                                            |
+| `source`     | TEXT            | e.g. `disposition:DONATE_LOCAL`, `bonus:chose_renewed`, `reward:prime_1month`, `badge:seed_saver` |
+| `co2e_kg`    | REAL            | kg CO₂e avoided (0.0 for non-earn events)                                                         |
+| `streak_day` | INTEGER         | streak at time of the event                                                                       |
+| `badge`      | TEXT (nullable) | badge slug if this event unlocked one                                                             |
+| `item_id`    | TEXT (nullable) | order/item reference                                                                              |
+| `created_at` | DATETIME        | UTC, server-defaulted                                                                             |
 
 **Indexes:** `(user_id)`, `(user_id, event_type)`, `(created_at)`.
 
@@ -160,23 +160,23 @@ sum of `co2e_kg` over `earned` events. Nothing is ever updated in place.
 
 ### Repository methods (`db/repositories.py::CoinLedgerRepository`)
 
-| Method | Returns | Purpose |
-|---|---|---|
-| `add_event(...)` | `CoinEvent` | insert + flush a single immutable event |
-| `get_balance(db, user_id)` | `int` | `SUM(amount)` for the user |
-| `get_co2e_total(db, user_id)` | `float` | `SUM(co2e_kg)` over earned events |
-| `get_history(db, user_id, limit=20)` | `list[CoinEvent]` | newest-first activity |
-| `get_last_earn_event(db, user_id)` | `CoinEvent \| None` | drives streak calc |
-| `coins_earned_last_24h(db, user_id)` | `int` | anti-abuse fraud flag |
-| `platform_co2e_total(db)` | `float` | impact ticker |
-| `platform_items_count(db)` | `int` | distinct items given a second life |
+| Method                               | Returns             | Purpose                                 |
+| ------------------------------------ | ------------------- | --------------------------------------- |
+| `add_event(...)`                     | `CoinEvent`         | insert + flush a single immutable event |
+| `get_balance(db, user_id)`           | `int`               | `SUM(amount)` for the user              |
+| `get_co2e_total(db, user_id)`        | `float`             | `SUM(co2e_kg)` over earned events       |
+| `get_history(db, user_id, limit=20)` | `list[CoinEvent]`   | newest-first activity                   |
+| `get_last_earn_event(db, user_id)`   | `CoinEvent \| None` | drives streak calc                      |
+| `coins_earned_last_24h(db, user_id)` | `int`               | anti-abuse fraud flag                   |
+| `platform_co2e_total(db)`            | `float`             | impact ticker                           |
+| `platform_items_count(db)`           | `int`               | distinct items given a second life      |
 
 ---
 
 ## 5. The CO₂e engine
 
 `core/co2e_engine.py` — pure functions, no I/O. This is the scientific backbone:
-coins are issued *from CO₂e*, never invented.
+coins are issued _from CO₂e_, never invented.
 
 ### Dispositions
 
@@ -189,13 +189,13 @@ zero — everything else is measured as avoidance relative to it.
 
 ### Constants
 
-| Constant | Value | Source |
-|---|---|---|
-| `EF_ROAD_KG_PER_KG_KM` | `0.089 / 1000` | GLEC Framework / ISO 14083 |
-| `BASELINE_DISTANCE_KM` | `300` | assumed average one-way to FC |
-| `BASELINE_ITEM_WEIGHT_KG` | `0.5` | configurable per category |
-| `MANUFACTURE_AVOIDED` | electronics 45, appliances 30, clothing 12, footwear 8, toys 5, books 1.5, default 10 (kg) | LCA literature / ecoinvent |
-| `COIN_MULTIPLIER` | `10` | 1 kg CO₂e avoided = 10 coins (overridable via config) |
+| Constant                  | Value                                                                                      | Source                                                |
+| ------------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
+| `EF_ROAD_KG_PER_KG_KM`    | `0.089 / 1000`                                                                             | GLEC Framework / ISO 14083                            |
+| `BASELINE_DISTANCE_KM`    | `300`                                                                                      | assumed average one-way to FC                         |
+| `BASELINE_ITEM_WEIGHT_KG` | `0.5`                                                                                      | configurable per category                             |
+| `MANUFACTURE_AVOIDED`     | electronics 45, appliances 30, clothing 12, footwear 8, toys 5, books 1.5, default 10 (kg) | LCA literature / ecoinvent                            |
+| `COIN_MULTIPLIER`         | `10`                                                                                       | 1 kg CO₂e avoided = 10 coins (overridable via config) |
 
 ### Functions
 
@@ -209,15 +209,15 @@ equivalents(co2e_kg) -> {"trees_per_month", "km_not_driven", "phone_charges"}
 `co2e_avoided` accepts either a `Disposition` enum or its string form. The
 avoidance formula per disposition:
 
-| Disposition | Formula (`base` = baseline, `mfg` = manufacture-avoided) |
-|---|---|
-| `P2P_LOCAL` | `base + mfg − (weight × max(buyer_km, 5) × EF_ROAD)` |
-| `DONATE_LOCAL` | `base + 0.70 × mfg` |
-| `KEEP` | `base + mfg` |
-| `REFURBISH` | `base + 0.85 × mfg` |
-| `RESELL` | `base + 0.75 × mfg` |
-| `RECYCLE` | `0.60 × base` |
-| `RETURN_FC` / unknown | `0.0` |
+| Disposition           | Formula (`base` = baseline, `mfg` = manufacture-avoided) |
+| --------------------- | -------------------------------------------------------- |
+| `P2P_LOCAL`           | `base + mfg − (weight × max(buyer_km, 5) × EF_ROAD)`     |
+| `DONATE_LOCAL`        | `base + 0.70 × mfg`                                      |
+| `KEEP`                | `base + mfg`                                             |
+| `REFURBISH`           | `base + 0.85 × mfg`                                      |
+| `RESELL`              | `base + 0.75 × mfg`                                      |
+| `RECYCLE`             | `0.60 × base`                                            |
+| `RETURN_FC` / unknown | `0.0`                                                    |
 
 > **Note on the numbers:** with `BASELINE_DISTANCE_KM = 300` the transport
 > baseline (~0.013 kg) is small relative to manufacture-avoidance, so manufacture
@@ -257,12 +257,12 @@ compute_new_streak(last_earn_at, last_streak, now, reset_hours=48) -> int
 
 Awarded at cumulative-CO₂e thresholds (ascending):
 
-| Slug | Badge | Icon | Threshold | Equivalent |
-|---|---|---|---|---|
-| `seed_saver` | Seed Saver | 🌱 | 5 kg | 6 trees planted |
-| `green_guardian` | Green Guardian | 🌿 | 25 kg | Skipped 119 km of driving |
-| `forest_keeper` | Forest Keeper | 🌳 | 100 kg | Powered a home for 2 weeks |
-| `planet_protector` | Planet Protector | 🌍 | 500 kg | Offset a flight Mumbai→Delhi |
+| Slug               | Badge            | Icon | Threshold | Equivalent                   |
+| ------------------ | ---------------- | ---- | --------- | ---------------------------- |
+| `seed_saver`       | Seed Saver       | 🌱   | 5 kg      | 6 trees planted              |
+| `green_guardian`   | Green Guardian   | 🌿   | 25 kg     | Skipped 119 km of driving    |
+| `forest_keeper`    | Forest Keeper    | 🌳   | 100 kg    | Powered a home for 2 weeks   |
+| `planet_protector` | Planet Protector | 🌍   | 500 kg    | Offset a flight Mumbai→Delhi |
 
 ```python
 newly_earned_badge(previous_total_kg, new_total_kg) -> Badge | None  # highest crossed
@@ -279,16 +279,16 @@ When an earn event crosses a threshold, the service writes a separate
 `core/rewards.py` loads `data/rewards.json` into a cached singleton at startup
 (raises `RuntimeError` if the file is missing or malformed — the service refuses
 to start without a valid catalog). Redemption is **restricted to
-sustainability-positive rewards by design** — that restriction *is* the demand
+sustainability-positive rewards by design** — that restriction _is_ the demand
 subsidy that closes the loop.
 
-| `reward_id` | Name | Cost | Category |
-|---|---|---|---|
-| `renewed_discount_100` | ₹10 off any Renewed product | 100 | renewed_discount |
-| `renewed_flash_access_250` | Priority Renewed flash-sale access | 250 | renewed_discount |
-| `prime_1month_1000` | 1 month Prime membership | 1000 | membership |
-| `impact_certificate_500` | Green Impact Certificate (PDF) | 500 | certificate |
-| `donate_ngo_reforestation` | Donate coins to NGO reforestation | 100 | donation |
+| `reward_id`                | Name                               | Cost | Category         |
+| -------------------------- | ---------------------------------- | ---- | ---------------- |
+| `renewed_discount_100`     | ₹10 off any Renewed product        | 100  | renewed_discount |
+| `renewed_flash_access_250` | Priority Renewed flash-sale access | 250  | renewed_discount |
+| `prime_1month_1000`        | 1 month Prime membership           | 1000 | membership       |
+| `impact_certificate_500`   | Green Impact Certificate (PDF)     | 500  | certificate      |
+| `donate_ngo_reforestation` | Donate coins to NGO reforestation  | 100  | donation         |
 
 ---
 
@@ -319,14 +319,14 @@ Issue coins for a return disposition. **Called by Module 1** after routing.
 
 **Request**
 
-| Field | Type | Required | Default |
-|---|---|---|---|
-| `user_id` | string | yes | — |
-| `disposition` | enum | yes | — |
-| `category` | string | yes | — |
-| `item_id` | string | yes | — |
-| `item_weight_kg` | float > 0 | no | 0.5 |
-| `buyer_distance_km` | float ≥ 0 | no | 0.0 |
+| Field               | Type      | Required | Default |
+| ------------------- | --------- | -------- | ------- |
+| `user_id`           | string    | yes      | —       |
+| `disposition`       | enum      | yes      | —       |
+| `category`          | string    | yes      | —       |
+| `item_id`           | string    | yes      | —       |
+| `item_weight_kg`    | float > 0 | no       | 0.5     |
+| `buyer_distance_km` | float ≥ 0 | no       | 0.0     |
 
 ```jsonc
 // → 200
@@ -336,11 +336,19 @@ Issue coins for a return disposition. **Called by Module 1** after routing.
   "new_balance": 56,
   "streak": 1,
   "badge_unlocked": {
-    "slug": "seed_saver", "name": "Seed Saver", "icon": "🌱",
-    "threshold_kg": 5.0, "equivalent": "6 trees planted", "unlocked": true
+    "slug": "seed_saver",
+    "name": "Seed Saver",
+    "icon": "🌱",
+    "threshold_kg": 5.0,
+    "equivalent": "6 trees planted",
+    "unlocked": true,
   },
-  "equivalents": { "trees_per_month": 6.8, "km_not_driven": 26.7, "phone_charges": 701 },
-  "flagged_for_review": false
+  "equivalents": {
+    "trees_per_month": 6.8,
+    "km_not_driven": 26.7,
+    "phone_charges": 701,
+  },
+  "flagged_for_review": false,
 }
 ```
 
@@ -358,12 +366,12 @@ all bonus triggers via the `source` string.
 
 **Request**
 
-| Field | Type | Required |
-|---|---|---|
-| `user_id` | string | yes |
-| `coins` | int > 0 | yes |
-| `source` | string | yes |
-| `item_id` | string | no |
+| Field     | Type    | Required |
+| --------- | ------- | -------- |
+| `user_id` | string  | yes      |
+| `coins`   | int > 0 | yes      |
+| `source`  | string  | yes      |
+| `item_id` | string  | no       |
 
 ```jsonc
 // → 200
@@ -401,13 +409,28 @@ Full wallet view for the UI.
   "user_id": "priya",
   "balance": 96,
   "co2e_total_kg": 5.61,
-  "equivalents": { "trees_per_month": 6.8, "km_not_driven": 26.7, "phone_charges": 701 },
-  "badges": [ { "slug": "seed_saver", "...": "...", "unlocked": true }, "... all 4 badges with unlocked flags ..." ],
+  "equivalents": {
+    "trees_per_month": 6.8,
+    "km_not_driven": 26.7,
+    "phone_charges": 701,
+  },
+  "badges": [
+    { "slug": "seed_saver", "...": "...", "unlocked": true },
+    "... all 4 badges with unlocked flags ...",
+  ],
   "history": [
-    { "id": "uuid", "event_type": "earned", "amount": 56, "source": "disposition:DONATE_LOCAL",
-      "co2e_kg": 5.61, "streak_day": 1, "badge": "seed_saver", "item_id": "shoe-1",
-      "created_at": "2026-06-14T10:00:00+00:00" }
-  ]
+    {
+      "id": "uuid",
+      "event_type": "earned",
+      "amount": 56,
+      "source": "disposition:DONATE_LOCAL",
+      "co2e_kg": 5.61,
+      "streak_day": 1,
+      "badge": "seed_saver",
+      "item_id": "shoe-1",
+      "created_at": "2026-06-14T10:00:00+00:00",
+    },
+  ],
 }
 ```
 
@@ -422,7 +445,11 @@ Platform-wide totals — powers the live demo ticker.
 
 ```jsonc
 // → 200
-{ "co2e_avoided_kg": 2847.0, "items_given_second_life": 891, "trees_equivalent": 3430.1 }
+{
+  "co2e_avoided_kg": 2847.0,
+  "items_given_second_life": 891,
+  "trees_equivalent": 3430.1,
+}
 ```
 
 ---
@@ -449,7 +476,7 @@ exactly. Rewards a customer who kept an item after a nudge with
   "risk_score": 0.82,
   "intervention_type": "SIZE_GUIDANCE",
   "session_id": "sess-1",
-  "emitted_at": "2026-06-14T10:00:00Z"
+  "emitted_at": "2026-06-14T10:00:00Z",
 }
 ```
 
@@ -466,15 +493,15 @@ exactly. Rewards a customer who kept an item after a nudge with
 variable or a `.env` file. Numeric fields have defensive validators — an invalid
 value is **logged and replaced with the default** rather than crashing startup.
 
-| Setting | Env var | Default | Purpose |
-|---|---|---|---|
-| `DB_URL` | `DB_URL` | `sqlite:///./green_coin.db` | database connection |
-| `REWARDS_PATH` | `REWARDS_PATH` | `data/rewards.json` | catalog file |
-| `COIN_MULTIPLIER` | `COIN_MULTIPLIER` | `10` | coins per kg CO₂e |
-| `EARN_CAP_PER_EVENT` | `EARN_CAP_PER_EVENT` | `500` | max coins per earn |
-| `FRAUD_DAILY_THRESHOLD` | `FRAUD_DAILY_THRESHOLD` | `2000` | 24h fraud flag |
-| `KEPT_AFTER_NUDGE_COINS` | `KEPT_AFTER_NUDGE_COINS` | `40` | Module 3 reward |
-| `STREAK_RESET_HOURS` | `STREAK_RESET_HOURS` | `48` | streak reset window |
+| Setting                  | Env var                  | Default                     | Purpose             |
+| ------------------------ | ------------------------ | --------------------------- | ------------------- |
+| `DB_URL`                 | `DB_URL`                 | `sqlite:///./green_coin.db` | database connection |
+| `REWARDS_PATH`           | `REWARDS_PATH`           | `data/rewards.json`         | catalog file        |
+| `COIN_MULTIPLIER`        | `COIN_MULTIPLIER`        | `10`                        | coins per kg CO₂e   |
+| `EARN_CAP_PER_EVENT`     | `EARN_CAP_PER_EVENT`     | `500`                       | max coins per earn  |
+| `FRAUD_DAILY_THRESHOLD`  | `FRAUD_DAILY_THRESHOLD`  | `2000`                      | 24h fraud flag      |
+| `KEPT_AFTER_NUDGE_COINS` | `KEPT_AFTER_NUDGE_COINS` | `40`                        | Module 3 reward     |
+| `STREAK_RESET_HOURS`     | `STREAK_RESET_HOURS`     | `48`                        | streak reset window |
 
 Example `.env`:
 
@@ -490,12 +517,12 @@ EARN_CAP_PER_EVENT=500
 
 The Health Card JSON and these HTTP calls are the inter-module contract.
 
-| Module | Direction | Endpoint | Payload |
-|---|---|---|---|
-| **Module 1** (Grading/Routing) | → Green Coin | `POST /api/v4/coins/earn` | disposition + category + item |
+| Module                           | Direction    | Endpoint                          | Payload                                  |
+| -------------------------------- | ------------ | --------------------------------- | ---------------------------------------- |
+| **Module 1** (Grading/Routing)   | → Green Coin | `POST /api/v4/coins/earn`         | disposition + category + item            |
 | **Module 3** (Return Prevention) | → Green Coin | `POST /api/v4/purchase-avoidance` | `PurchaseAvoidanceEvent` (already wired) |
-| **Module 2** (Recommend) | → Green Coin | `POST /api/v4/coins/earn/bonus` | `source: "chose_renewed"` (+50) |
-| **Module 5** (P2P) | → Green Coin | `POST /api/v4/coins/earn/bonus` | `source: "p2p_referral"` (+25) |
+| **Module 2** (Recommend)         | → Green Coin | `POST /api/v4/coins/earn/bonus`   | `source: "chose_renewed"` (+50)          |
+| **Module 5** (P2P)               | → Green Coin | `POST /api/v4/coins/earn/bonus`   | `source: "p2p_referral"` (+25)           |
 
 **Module 3 is already configured** — its `integrations/green_coin.py` emitter
 posts to `GREEN_COIN_BASE_URL` (default `http://localhost:8002`) at
@@ -614,4 +641,7 @@ makes this ~10 lines.
 **Impact certificate** — generate `sha256(user_id + co2e_total + timestamp)` and
 render a PDF (e.g. `reportlab`); store the hash as a `badge_earned`-style audit
 row for tamper-evident verification.
+
+```
+
 ```

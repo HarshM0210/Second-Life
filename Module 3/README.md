@@ -1,4 +1,4 @@
-# Module 3 — Return Prevention: Technical Documentation
+# Module 3 — Return Prevention
 
 ## 1. Overview
 
