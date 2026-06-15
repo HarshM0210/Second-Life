@@ -91,12 +91,18 @@ export default function ListingCard({ listing }: { listing: Listing }) {
               sku_id: listing.id,
               title: listing.title,
               emoji: listing.emoji,
+              category: listing.category,
+              subcategory: listing.category,
+              brand: listing.brand,
               price: listing.ask_price,
               original_price: listing.original_price,
-              category: listing.category,
               rating: 0,
               reviews: 0,
               renewed: false,
+              blurb: listing.condition
+                ? `Community resale · ${listing.condition} condition`
+                : "Community resale listing",
+              health_score: listing.health_score,
             })
           }
           className="btn-amz flex-1"
