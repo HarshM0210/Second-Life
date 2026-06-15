@@ -30,7 +30,12 @@ const MAX_IMAGES = 5;
 // condition Q&A + return-window logic) and a Module 5 pricing category (drives
 // demand / depreciation in the quote).
 const CATEGORIES: { label: string; m1: string; m5: string; emoji: string }[] = [
-  { label: "Clothing & Footwear", m1: "Clothing & Footwear", m5: "fashion", emoji: "👕" },
+  {
+    label: "Clothing & Footwear",
+    m1: "Clothing & Footwear",
+    m5: "fashion",
+    emoji: "👕",
+  },
   { label: "Electronics", m1: "Electronics", m5: "electronics", emoji: "🔌" },
   { label: "Home & Other", m1: "Other", m5: "kitchen", emoji: "🏠" },
 ];
@@ -62,12 +67,9 @@ export default function Classifieds() {
       <div className="card overflow-hidden">
         <div className="bg-gradient-to-r from-amz-navy to-amz-slate text-white p-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Classifieds — community resale, certified by AI</h1>
-            <p className="text-gray-300 text-sm mt-1 max-w-2xl">
-              Buy Renewed and peer-to-peer items from the Second Life community, or list your own.
-              Every listing is graded by our AI (Module 1 Health Card) and priced fairly by our
-              resale model (Module 5) — so condition and price are always transparent. 🤝♻
-            </p>
+            <h1 className="text-2xl font-bold">
+              Classifieds — community resale, certified by AI
+            </h1>
           </div>
           <div className="hidden md:block text-6xl">🏷️</div>
         </div>
@@ -84,7 +86,11 @@ export default function Classifieds() {
       </div>
 
       {tab === "browse" ? (
-        <BrowseView renewed={renewed} listings={listings} onSell={() => setTab("sell")} />
+        <BrowseView
+          renewed={renewed}
+          listings={listings}
+          onSell={() => setTab("sell")}
+        />
       ) : (
         <SellWizard
           persona={persona}
@@ -138,7 +144,8 @@ function BrowseView({
     <div className="space-y-6">
       <div className="card p-4 flex items-center justify-between bg-amz-green/5 border-amz-green/30">
         <div className="text-sm text-gray-700">
-          Got something to sell? Get an instant AI grade + fair price and list it in minutes.
+          Got something to sell? Get an instant AI grade + fair price and list
+          it in minutes.
         </div>
         <button className="btn-amz-orange" onClick={onSell}>
           Sell your item
@@ -149,7 +156,9 @@ function BrowseView({
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Community resale (P2P)</h2>
-          <span className="text-xs text-gray-500">{listings.length} listings</span>
+          <span className="text-xs text-gray-500">
+            {listings.length} listings
+          </span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {listings.map((l) => (
@@ -184,7 +193,9 @@ function SellWizard({
   goBrowse,
 }: {
   persona: ReturnType<typeof useSession>["persona"];
-  onListed: (l: Parameters<ReturnType<typeof useClassifieds>["addListing"]>[0]) => void;
+  onListed: (
+    l: Parameters<ReturnType<typeof useClassifieds>["addListing"]>[0],
+  ) => void;
   goBrowse: () => void;
 }) {
   const [step, setStep] = useState<Step>("details");
@@ -203,7 +214,9 @@ function SellWizard({
   const [returnId, setReturnId] = useState("");
   const [questions, setQuestions] = useState<CQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [meta, setMeta] = useState<ReturnType<typeof deriveListingMeta> | null>(null);
+  const [meta, setMeta] = useState<ReturnType<typeof deriveListingMeta> | null>(
+    null,
+  );
   const [result, setResult] = useState<SubmitResponse | null>(null);
   const [quote, setQuote] = useState<PriceQuote | null>(null);
   const [preview, setPreview] = useState<string>("");
@@ -221,17 +234,35 @@ function SellWizard({
 
   const reset = () => {
     setStep("details");
-    setTitle(""); setCatIndex(0); setBrand(""); setBrandTier("standard");
+    setTitle("");
+    setCatIndex(0);
+    setBrand("");
+    setBrandTier("standard");
     setOriginalPrice(0);
-    setImages([]); setProductId(""); setReturnId(""); setQuestions([]); setAnswers({});
+    setImages([]);
+    setProductId("");
+    setReturnId("");
+    setQuestions([]);
+    setAnswers({});
     setMeta(null);
-    setResult(null); setQuote(null); setPreview(""); setPickup(null); setError("");
+    setResult(null);
+    setQuote(null);
+    setPreview("");
+    setPickup(null);
+    setError("");
   };
 
   const start = async () => {
-    if (!title.trim()) { setError("Please enter a title for your item."); return; }
-    if (!(originalPrice > 0)) { setError("Please enter the original price (₹)."); return; }
-    setBusy(true); setError("");
+    if (!title.trim()) {
+      setError("Please enter a title for your item.");
+      return;
+    }
+    if (!(originalPrice > 0)) {
+      setError("Please enter the original price (₹).");
+      return;
+    }
+    setBusy(true);
+    setError("");
     const pid = `P2P-${Date.now().toString(36).toUpperCase()}`;
     setProductId(pid);
     try {
@@ -260,10 +291,16 @@ function SellWizard({
   };
 
   const grade = async () => {
-    setBusy(true); setError(""); setStep("grading");
+    setBusy(true);
+    setError("");
+    setStep("grading");
     try {
       const encoded = images.length
-        ? (await Promise.all(images.slice(0, MAX_IMAGES).map((f) => encodeImage(f)))).filter(Boolean)
+        ? (
+            await Promise.all(
+              images.slice(0, MAX_IMAGES).map((f) => encodeImage(f)),
+            )
+          ).filter(Boolean)
         : [];
       const imageUris = encoded.length ? encoded : ["s3://uploads/listing.jpg"];
       if (encoded.length) setPreview(encoded[0]);
@@ -316,7 +353,8 @@ function SellWizard({
 
   const list = async () => {
     if (!result || !quote) return;
-    setBusy(true); setError("");
+    setBusy(true);
+    setError("");
     try {
       let job: PickupJob | null = null;
       try {
@@ -350,22 +388,30 @@ function SellWizard({
   };
 
   const steps = ["Details", "Condition Q&A", "AI Grading", "Price & List"];
-  const stepIndex = { details: 0, questions: 1, grading: 2, quote: 3, listed: 3 }[step];
+  const stepIndex = {
+    details: 0,
+    questions: 1,
+    grading: 2,
+    quote: 3,
+    listed: 3,
+  }[step];
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
       <Stepper steps={steps} active={stepIndex} />
 
       {error && (
-        <div className="card p-3 text-sm text-red-700 bg-red-50 border-red-200">{error}</div>
+        <div className="card p-3 text-sm text-red-700 bg-red-50 border-red-200">
+          {error}
+        </div>
       )}
 
       {step === "details" && (
         <div className="card p-5 space-y-4">
           <h2 className="text-lg font-bold">List an item for resale</h2>
           <p className="text-sm text-gray-600">
-            Listing as <b>{persona.name}</b>. Tell us about your item — we'll grade it with AI and
-            suggest a fair resale price.
+            Listing as <b>{persona.name}</b>. Tell us about your item — we'll
+            grade it with AI and suggest a fair resale price.
           </p>
 
           <Field label="Title">
@@ -423,7 +469,9 @@ function SellWizard({
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-amz-orange"
               >
                 {BRAND_TIERS.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
                 ))}
               </select>
             </Field>
@@ -431,21 +479,31 @@ function SellWizard({
 
           <Field label="Photos of the item">
             <p className="text-xs text-gray-500 mb-2">
-              Clear photos of the front, back, and any defects let the AI grader (DINOv2 anomaly +
-              wear detection) assess condition accurately. Up to {MAX_IMAGES} photos.
+              Clear photos of the front, back, and any defects let the AI grader
+              (DINOv2 anomaly + wear detection) assess condition accurately. Up
+              to {MAX_IMAGES} photos.
             </p>
             <input
               type="file"
               accept="image/*"
               multiple
-              onChange={(e) => setImages(Array.from(e.target.files ?? []).slice(0, MAX_IMAGES))}
+              onChange={(e) =>
+                setImages(Array.from(e.target.files ?? []).slice(0, MAX_IMAGES))
+              }
               className="block text-sm text-gray-700 file:mr-3 file:rounded-full file:border file:border-gray-300 file:bg-white file:px-3 file:py-1.5 file:text-sm hover:file:bg-gray-50"
             />
             {images.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {images.map((f, i) => (
-                  <div key={i} className="w-16 h-16 rounded border border-gray-200 overflow-hidden bg-gray-50">
-                    <img src={imageUrls[i]} alt={f.name} className="w-full h-full object-cover" />
+                  <div
+                    key={i}
+                    className="w-16 h-16 rounded border border-gray-200 overflow-hidden bg-gray-50"
+                  >
+                    <img
+                      src={imageUrls[i]}
+                      alt={f.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 ))}
               </div>
@@ -473,7 +531,9 @@ function SellWizard({
                     {(q.options ?? []).map((opt) => (
                       <button
                         key={opt}
-                        onClick={() => setAnswers((a) => ({ ...a, [q.id]: opt }))}
+                        onClick={() =>
+                          setAnswers((a) => ({ ...a, [q.id]: opt }))
+                        }
                         className={`text-xs px-2.5 py-1 rounded-full border ${
                           answers[q.id] === opt
                             ? "bg-amz-navy text-white border-amz-navy"
@@ -487,7 +547,9 @@ function SellWizard({
                 ) : (
                   <input
                     value={answers[q.id] ?? ""}
-                    onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
+                    onChange={(e) =>
+                      setAnswers((a) => ({ ...a, [q.id]: e.target.value }))
+                    }
                     placeholder={q.note ?? ""}
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-amz-orange"
                   />
@@ -496,7 +558,10 @@ function SellWizard({
                   <input
                     value={answers[`${q.id}__note`] ?? ""}
                     onChange={(e) =>
-                      setAnswers((a) => ({ ...a, [`${q.id}__note`]: e.target.value }))
+                      setAnswers((a) => ({
+                        ...a,
+                        [`${q.id}__note`]: e.target.value,
+                      }))
                     }
                     placeholder={q.note}
                     className="mt-2 w-full border border-gray-200 rounded px-3 py-1.5 text-xs outline-none focus:border-amz-orange"
@@ -506,7 +571,9 @@ function SellWizard({
             ))}
           </div>
           <div className="flex gap-2">
-            <button className="btn-ghost" onClick={() => setStep("details")}>Back</button>
+            <button className="btn-ghost" onClick={() => setStep("details")}>
+              Back
+            </button>
             <button className="btn-amz-orange" onClick={grade} disabled={busy}>
               Submit for AI grading
             </button>
@@ -519,7 +586,8 @@ function SellWizard({
           <div className="text-4xl animate-pulse">🔍</div>
           <div className="font-medium">Grading your item…</div>
           <div className="text-sm text-gray-500">
-            DINOv2 anomaly detection · wear analysis · Q&A intent · resale pricing — target &lt; 2s
+            DINOv2 anomaly detection · wear analysis · Q&A intent · resale
+            pricing — target &lt; 2s
           </div>
         </div>
       )}
@@ -536,8 +604,12 @@ function SellWizard({
               </h2>
               <div className="flex items-end gap-4 flex-wrap">
                 <div>
-                  <div className="text-xs text-gray-500">List price (gross)</div>
-                  <div className="text-2xl font-bold">₹{quote.gross_price.toLocaleString()}</div>
+                  <div className="text-xs text-gray-500">
+                    List price (gross)
+                  </div>
+                  <div className="text-2xl font-bold">
+                    ₹{quote.gross_price.toLocaleString()}
+                  </div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-500">You receive (net)</div>
@@ -547,7 +619,9 @@ function SellWizard({
                 </div>
                 <div className="text-sm text-gray-600">
                   fee ₹{quote.fee.toLocaleString()}
-                  <br />range ₹{quote.low.toLocaleString()}–₹{quote.high.toLocaleString()} · conf{" "}
+                  <br />
+                  range ₹{quote.low.toLocaleString()}–₹
+                  {quote.high.toLocaleString()} · conf{" "}
                   {(quote.confidence * 100).toFixed(0)}%
                 </div>
               </div>
@@ -560,8 +634,14 @@ function SellWizard({
           )}
 
           <div className="flex gap-2">
-            <button className="btn-ghost" onClick={() => setStep("questions")}>Back</button>
-            <button className="btn-amz-orange" onClick={list} disabled={busy || !quote}>
+            <button className="btn-ghost" onClick={() => setStep("questions")}>
+              Back
+            </button>
+            <button
+              className="btn-amz-orange"
+              onClick={list}
+              disabled={busy || !quote}
+            >
               {busy ? "Publishing…" : "List on Classifieds"}
             </button>
           </div>
@@ -571,19 +651,27 @@ function SellWizard({
       {step === "listed" && (
         <div className="card p-6 text-center space-y-4">
           <div className="text-5xl">🎉</div>
-          <h2 className="text-lg font-bold">Your item is live on Classifieds</h2>
+          <h2 className="text-lg font-bold">
+            Your item is live on Classifieds
+          </h2>
           <p className="text-sm text-gray-600">
-            <b>{title}</b> is now listed at ₹{quote?.gross_price.toLocaleString()} — AI-graded and
-            certified for buyers across the Second Life community.
+            <b>{title}</b> is now listed at ₹
+            {quote?.gross_price.toLocaleString()} — AI-graded and certified for
+            buyers across the Second Life community.
           </p>
           {pickup && (
             <div className="text-sm text-amz-green bg-emerald-50 border border-emerald-200 rounded p-2 inline-block">
-              ✓ Courier pickup scheduled — job {String(pickup.job_id).slice(0, 8)} · {pickup.status}
+              ✓ Courier pickup scheduled — job{" "}
+              {String(pickup.job_id).slice(0, 8)} · {pickup.status}
             </div>
           )}
           <div className="flex gap-2 justify-center">
-            <button className="btn-amz-orange" onClick={goBrowse}>View in Browse</button>
-            <button className="btn-ghost" onClick={reset}>List another item</button>
+            <button className="btn-amz-orange" onClick={goBrowse}>
+              View in Browse
+            </button>
+            <button className="btn-ghost" onClick={reset}>
+              List another item
+            </button>
           </div>
         </div>
       )}
@@ -591,7 +679,13 @@ function SellWizard({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block space-y-1">
       <span className="text-sm font-medium">{label}</span>
@@ -607,12 +701,16 @@ function Stepper({ steps, active }: { steps: string[]; active: number }) {
         <li key={s} className="flex items-center gap-2">
           <span
             className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-              i <= active ? "bg-amz-orange text-[#0f1111]" : "bg-gray-200 text-gray-500"
+              i <= active
+                ? "bg-amz-orange text-[#0f1111]"
+                : "bg-gray-200 text-gray-500"
             }`}
           >
             {i + 1}
           </span>
-          <span className={i <= active ? "font-medium" : "text-gray-400"}>{s}</span>
+          <span className={i <= active ? "font-medium" : "text-gray-400"}>
+            {s}
+          </span>
           {i < steps.length - 1 && <span className="text-gray-300">›</span>}
         </li>
       ))}

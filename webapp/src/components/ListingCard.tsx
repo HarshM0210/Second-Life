@@ -1,5 +1,7 @@
+import { Link } from "react-router-dom";
 import type { Listing } from "@/state/classifieds";
 import { ConditionBadge } from "@/components/ui";
+import { useCart } from "@/state/cart";
 
 function timeAgo(ts: number): string {
   const mins = Math.round((Date.now() - ts) / 60000);
@@ -10,6 +12,7 @@ function timeAgo(ts: number): string {
 }
 
 export default function ListingCard({ listing }: { listing: Listing }) {
+  const { addItem } = useCart();
   const savings =
     listing.original_price > listing.ask_price
       ? Math.round((1 - listing.ask_price / listing.original_price) * 100)
@@ -19,7 +22,11 @@ export default function ListingCard({ listing }: { listing: Listing }) {
     <div className="card p-3 flex flex-col hover:shadow-lg transition-shadow">
       <div className="relative h-36 flex items-center justify-center bg-gray-50 rounded mb-2 overflow-hidden">
         {listing.preview ? (
-          <img src={listing.preview} alt={listing.title} className="w-full h-full object-cover" />
+          <img
+            src={listing.preview}
+            alt={listing.title}
+            className="w-full h-full object-cover"
+          />
         ) : (
           <span className="text-6xl">{listing.emoji}</span>
         )}
@@ -33,12 +40,16 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         )}
       </div>
 
-      <div className="text-sm text-[#0f1111] line-clamp-2 min-h-[2.5rem]">{listing.title}</div>
+      <div className="text-sm text-[#0f1111] line-clamp-2 min-h-[2.5rem]">
+        {listing.title}
+      </div>
 
       <div className="mt-1 flex items-center gap-2 flex-wrap">
         {listing.condition && <ConditionBadge condition={listing.condition} />}
         {typeof listing.health_score === "number" && (
-          <span className="text-xs text-amz-green">Health {listing.health_score}/100</span>
+          <span className="text-xs text-amz-green">
+            Health {listing.health_score}/100
+          </span>
         )}
       </div>
 
@@ -52,20 +63,46 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             ₹{listing.original_price.toLocaleString()}
           </span>
         )}
-        {savings > 0 && <span className="text-xs text-amz-price font-medium">-{savings}%</span>}
+        {savings > 0 && (
+          <span className="text-xs text-amz-price font-medium">
+            -{savings}%
+          </span>
+        )}
       </div>
 
       <div className="mt-1 text-xs text-gray-500">
-        Sold by <b className="text-gray-700">{listing.seller}</b> · {listing.brand} · {timeAgo(listing.created_at)}
+        Sold by <b className="text-gray-700">{listing.seller}</b> ·{" "}
+        {listing.brand} · {timeAgo(listing.created_at)}
       </div>
-      <div className="text-[11px] text-amz-green mt-0.5">✓ AI-graded · Certified by Amazon AI</div>
+      <div className="text-[11px] text-amz-green mt-0.5">
+        ✓ AI-graded · Certified by Amazon AI
+      </div>
 
       <div className="mt-auto pt-2 flex gap-2">
-        <button className="btn-ghost flex-1" disabled title="Demo — direct P2P checkout is mocked">
-          Message seller
-        </button>
-        <button className="btn-amz flex-1" disabled title="Demo — direct P2P checkout is mocked">
-          Buy P2P
+        <Link
+          to={`/product/${listing.id}`}
+          className="btn-ghost text-center flex-1"
+        >
+          View
+        </Link>
+        <button
+          onClick={() =>
+            addItem({
+              sku_id: listing.id,
+              title: listing.title,
+              emoji: listing.emoji,
+              price: listing.ask_price,
+              original_price: listing.original_price,
+              category: listing.category,
+              rating: 0,
+              reviews: 0,
+              renewed: false,
+            })
+          }
+          className="btn-amz flex-1"
+          aria-label={`Add ${listing.title} to cart`}
+        >
+          Add to cart
         </button>
       </div>
     </div>
