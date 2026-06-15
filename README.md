@@ -390,22 +390,29 @@ Amazon never explicitly accuses. The offer is a carrot, not a stick. Either path
 
 ### Disposition Routing — Priority Chain
 
-| Priority | Rule                                                       | Disposition                        | Gate              |
-| -------- | ---------------------------------------------------------- | ---------------------------------- | ----------------- |
-| 1        | Safety concern flagged in Q&A OR significant liquid damage | `manual_review`                    | safety_hold       |
-| 2        | Food: seal broken OR partially consumed                    | `recycle`                          | category_override |
-| 2        | Food: expired                                              | `recycle`                          | category_override |
-| 2        | Food: sealed + unexpired + wrong item                      | `return_to_seller`                 | category_override |
-| 3        | Electronics: factory reset = No                            | `manual_review`                    | safety_hold       |
-| 4        | Other: used on skin/body                                   | `donate` (score > 50) or `recycle` | category_override |
-| 5        | Gate A: total_processing_cost < product_value              | `return_to_seller`                 | A                 |
-| 5        | Gate A: unknown category                                   | `manual_review`                    | A                 |
-| 6        | Gate B: score > 90                                         | `resell`                           | B                 |
-| 6        | Gate B: score > 70                                         | `refurbish`                        | B                 |
-| 6        | Gate B: score > 50                                         | `donate`                           | B                 |
-| 6        | Gate B: score ≤ 50                                         | `recycle`                          | B                 |
+| Priority | Rule                                                       | Disposition                        | Gate               |
+| -------- | ---------------------------------------------------------- | ---------------------------------- | ------------------ |
+| 1        | Safety concern flagged in Q&A OR significant liquid damage | `manual_review`                    | Safety Hold        |
+| 2        | Food: seal broken OR partially consumed                    | `recycle`                          | Category Override  |
+| 2        | Food: expired                                              | `recycle`                          | Category Override  |
+| 2        | Food: sealed + unexpired + wrong item                      | `return_to_seller`                 | Category Override  |
+| 3        | Electronics: factory reset = No                            | `manual_review`                    | Safety Hold        |
+| 4        | Other: used on skin/body                                   | `donate` (score > 50) or `recycle` | Category Override  |
+| 5        | total_processing_cost ≥ product_value                      | `return_to_seller`                 | Economic Viability |
+| 5        | unknown category                                           | `manual_review`                    | Economic Viability |
+| 6        | score > 90                                                 | `resell`                           | Condition Routing  |
+| 6        | score > 70                                                 | `refurbish`                        | Condition Routing  |
+| 6        | score > 50                                                 | `donate`                           | Condition Routing  |
+| 6        | score ≤ 50                                                 | `recycle`                          | Condition Routing  |
 
 `total_processing_cost` = reverse logistics + inspection + refurb labor + storage (lookup table per category).
+
+**Gate explanations:**
+
+- **Safety Hold** — Overrides everything. Items with safety risks or unwiped electronics go to manual review regardless of condition or value.
+- **Category Override** — Category-specific rules that bypass generic scoring (food hygiene, skin-contact items, etc.).
+- **Economic Viability** — Checks whether the cost to process the item (logistics + inspection + refurb + storage) is justified by its market value. If not, the item is returned to the seller rather than processed at a loss.
+- **Condition Routing** — Items that clear the economic check are routed based on their AI health score (0–100): near-new items resell, recoverable items refurbish, usable-but-not-sellable items donate, end-of-life items recycle.
 
 ### Error Handling & Graceful Degradation
 
