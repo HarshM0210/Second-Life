@@ -5,6 +5,7 @@ import ProductDetail from "@/pages/ProductDetail";
 import ReturnWizard from "@/pages/ReturnWizard";
 import Wallet from "@/pages/Wallet";
 import Feed from "@/pages/Feed";
+import Classifieds from "@/pages/Classifieds";
 import Cart from "@/pages/Cart";
 import SignIn from "@/pages/SignIn";
 import SignUp from "@/pages/SignUp";
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/returns/:sku" element={<ReturnWizard />} />
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/recommended" element={<Feed />} />
+          <Route path="/classifieds" element={<Classifieds />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

@@ -104,6 +104,7 @@ export default function Layout() {
           <div className="flex items-center gap-1 px-3 py-1.5 overflow-x-auto whitespace-nowrap">
             <NavLink to="/" end className={navLink}>Shop</NavLink>
             <NavLink to="/recommended" className={navLink}>For You</NavLink>
+            <NavLink to="/classifieds" className={navLink}>Classifieds</NavLink>
             <NavLink to="/returns" className={navLink}>My Orders</NavLink>
             <NavLink to="/wallet" className={navLink}>Green Coin</NavLink>
           </div>
