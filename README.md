@@ -388,7 +388,7 @@ fraud_confidence = weighted_sum(
 
 Amazon never explicitly accuses. The offer is a carrot, not a stick. Either path produces a Health Card.
 
-### Disposition Routing — Priority Chain (first match wins)
+### Disposition Routing — Priority Chain
 
 | Priority | Rule                                                       | Disposition                        | Gate              |
 | -------- | ---------------------------------------------------------- | ---------------------------------- | ----------------- |
@@ -1025,7 +1025,7 @@ After 200 auto-graded returns: seller dashboard shows `4,200 kg CO₂e avoided �
 
 ---
 
-## Production Roadmap (Futuristic Vision)
+## Production Roadmap
 
 | Upgrade                                  | One-sentence pitch                                                                                                                                                                                          |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
