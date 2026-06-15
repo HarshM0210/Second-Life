@@ -3,7 +3,8 @@
 Maddie: tune these against the demo cases. Ross: tests should not hard-code
 values that duplicate these; import from here.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+import os
 
 
 @dataclass(frozen=True)
@@ -19,9 +20,18 @@ class RerankConfig:
 
 @dataclass(frozen=True)
 class EmbedConfig:
-    text_model: str = "Alibaba-NLP/gte-modernbert-base"  # 2025 model; local, no API
+    # Env-overridable so constrained hosts can swap the 768-dim gte-modernbert
+    # (~600 MB) for the lighter 384-dim bge-small (~130 MB) with no code change:
+    #   RECOMMEND_TEXT_MODEL=BAAI/bge-small-en-v1.5  RECOMMEND_EMBED_DIM=384
+    text_model: str = field(
+        default_factory=lambda: os.environ.get(
+            "RECOMMEND_TEXT_MODEL", "Alibaba-NLP/gte-modernbert-base"
+        )
+    )                                                    # 2025 model; local, no API
     image_model: str = "ViT-B/32"                        # CLIP, optional
-    dim: int = 768                                       # gte-modernbert-base dimension
+    dim: int = field(
+        default_factory=lambda: int(os.environ.get("RECOMMEND_EMBED_DIM", "768"))
+    )                                                    # must match text_model
 
 
 @dataclass(frozen=True)

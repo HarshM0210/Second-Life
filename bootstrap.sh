@@ -26,6 +26,7 @@
 #   ./bootstrap.sh --no-run        # set up + fetch models, but don't launch
 #   ./bootstrap.sh --skip-system   # skip apt (deps already installed)
 #   ./bootstrap.sh --no-dinov2     # skip DINOv2 weight download (opencv backend)
+#   ./bootstrap.sh --light-embed   # use lighter bge-small embedder (low-RAM hosts)
 #   ./bootstrap.sh --help
 #
 # After launch (dev):    web UI -> http://<host>:5173
@@ -53,12 +54,14 @@ WITH_DINOV2=1
 SERVE="dev"          # dev (vite :5173) | nginx (public :80/:443)
 DOMAIN=""
 IP_HTTPS=0           # --ip-https: derive a free <ip>.sslip.io hostname for TLS
+LIGHT_EMBED=0        # --light-embed: bge-small (384d) instead of gte-modernbert (768d)
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --no-run)      RUN=0 ;;
     --skip-system) SKIP_SYSTEM=1 ;;
     --no-dinov2)   WITH_DINOV2=0; ANOMALY_BACKEND="opencv" ;;
+    --light-embed) LIGHT_EMBED=1 ;;
     --nginx)       SERVE="nginx" ;;
     --ip-https)    SERVE="nginx"; IP_HTTPS=1 ;;
     --domain)      shift; DOMAIN="${1:-}"; [ -n "$DOMAIN" ] || { echo "--domain needs a value"; exit 2; } ;;
@@ -71,6 +74,12 @@ while [ $# -gt 0 ]; do
   shift
 done
 [ -n "$DOMAIN" ] && SERVE="nginx"   # a domain implies public nginx + HTTPS
+
+# Lighter embedder for constrained hosts (applies to both prefetch and runtime).
+if [ "$LIGHT_EMBED" = "1" ]; then
+  export RECOMMEND_TEXT_MODEL="BAAI/bge-small-en-v1.5"
+  export RECOMMEND_EMBED_DIM="384"
+fi
 
 log()  { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
 warn() { printf '\033[1;33m[warn]\033[0m %s\n' "$*"; }
@@ -283,6 +292,11 @@ launch() {
   # to Module 1's cwd, which run_all.py sets correctly.
   export ANOMALY_BACKEND
   export DINOV2_REF_DIR="storage/dinov2/refs"
+  # Models were already downloaded by fetch_models(); load them straight from the
+  # local cache with NO Hugging Face network round-trips. This is the fix for
+  # Module 2 hanging on cloud boxes with slow/restricted egress.
+  export HF_HUB_OFFLINE=1
+  export TRANSFORMERS_OFFLINE=1
 
   log "Starting the 5 module services + gateway (run_all.py)"
   python "${ROOT}/run_all.py"
