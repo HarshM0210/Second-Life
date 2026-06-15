@@ -18,6 +18,70 @@ const ORDERS: Product[] = ORDER_CATEGORIES
   .map((cat) => CATALOG.find((p) => !p.renewed && p.category === cat))
   .filter((p): p is Product => Boolean(p));
 
+const MAX_IMAGES = 5; // backend accepts at most 5 image URIs
+
+// Downscale an image File and encode it as a JPEG data: URI so the backend CV
+// graders receive the real pixels. Returns "" on any failure (caller falls back).
+async function encodeImage(file: File, maxSide = 1024, quality = 0.8): Promise<string> {
+  try {
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(String(fr.result));
+      fr.onerror = () => reject(fr.error);
+      fr.readAsDataURL(file);
+    });
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = () => reject(new Error("decode failed"));
+      im.src = dataUrl;
+    });
+    const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return dataUrl;
+    ctx.drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL("image/jpeg", quality);
+  } catch {
+    return "";
+  }
+}
+
+// Capture a single representative frame from a video File as a JPEG data: URI.
+async function encodeVideoFrame(file: File, maxSide = 1024, quality = 0.8): Promise<string> {
+  const url = URL.createObjectURL(file);
+  try {
+    const video = document.createElement("video");
+    video.src = url;
+    video.muted = true;
+    video.playsInline = true;
+    await new Promise<void>((resolve, reject) => {
+      video.onloadeddata = () => resolve();
+      video.onerror = () => reject(new Error("video load failed"));
+    });
+    await new Promise<void>((resolve) => {
+      video.onseeked = () => resolve();
+      video.currentTime = Math.min(1, (video.duration || 2) / 2);
+    });
+    const scale = Math.min(1, maxSide / Math.max(video.videoWidth || 1, video.videoHeight || 1));
+    const w = Math.max(1, Math.round((video.videoWidth || 1) * scale));
+    const h = Math.max(1, Math.round((video.videoHeight || 1) * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return "";
+    ctx.drawImage(video, 0, 0, w, h);
+    return canvas.toDataURL("image/jpeg", quality);
+  } catch {
+    return "";
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 export default function ReturnWizard() {
   const { sku } = useParams();
   const { persona } = useSession();
@@ -79,12 +143,20 @@ export default function ReturnWizard() {
   const submit = async () => {
     setBusy(true); setError(""); setStep("grading");
     try {
-      // No storage backend in the prototype: derive stable refs from the chosen
-      // files so the grader receives the customer-provided media.
-      const imageUris = images.length
-        ? images.map((f) => `upload://images/${f.name}`)
-        : ["s3://uploads/item.jpg"];
-      const videoUris = video ? [`upload://video/${video.name}`] : [];
+      // Encode the customer's actual photos (downscaled) and one video frame as
+      // base64 data: URIs so the backend CV graders see real pixels. Falls back to
+      // a neutral placeholder only when nothing usable was provided/encoded.
+      const encoded = images.length
+        ? (await Promise.all(images.slice(0, MAX_IMAGES).map((f) => encodeImage(f)))).filter(Boolean)
+        : [];
+      const imageUris = encoded.length ? encoded : ["s3://uploads/item.jpg"];
+
+      let videoUris: string[] = [];
+      if (video) {
+        const frame = await encodeVideoFrame(video);
+        if (frame) videoUris = [frame];
+      }
+
       const res = await submitReturn(returnId, {
         qa_answers: answers,
         image_uris: imageUris,
@@ -207,11 +279,11 @@ export default function ReturnWizard() {
             <div>
               <div className="text-sm font-medium mb-1">Add photos of the item</div>
               <p className="text-xs text-gray-500 mb-2">
-                Clear images of the front, back, and any defects help the AI grader assess condition accurately.
+                Clear images of the front, back, and any defects help the AI grader assess condition accurately. Up to {MAX_IMAGES} photos.
               </p>
               <input
                 type="file" accept="image/*" multiple
-                onChange={(e) => setImages(Array.from(e.target.files ?? []))}
+                onChange={(e) => setImages(Array.from(e.target.files ?? []).slice(0, MAX_IMAGES))}
                 className="block text-sm text-gray-700 file:mr-3 file:rounded-full file:border file:border-gray-300
                            file:bg-white file:px-3 file:py-1.5 file:text-sm hover:file:bg-gray-50"
               />

@@ -10,6 +10,7 @@ Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 16.1, 16.2, 16.3, 16.4, 16.5, 16.6
 
 import asyncio
 import logging
+import os
 import time
 from dataclasses import dataclass, field
 from typing import Union
@@ -47,6 +48,27 @@ FRAUD_SCAN_CATEGORY: str = "Clothing & Footwear"
 
 # Anomaly threshold for justification phrases
 DEFAULT_ANOMALY_THRESHOLD: float = 0.30
+
+
+def _build_anomaly_detector() -> "AnomalyDetector":
+    """Select the anomaly backend from ANOMALY_BACKEND (default: opencv).
+
+    "dinov2" wraps the cutting-edge DINOv2 detector with a resilient fallback to
+    the OpenCV detector, so behavior is identical to the default whenever torch,
+    weights, or a reference bank are unavailable.
+    """
+    backend = os.environ.get("ANOMALY_BACKEND", "opencv").lower()
+    base = AnomalyDetector()
+    if backend == "dinov2":
+        try:
+            from app.services.dinov2_anomaly import (
+                DinoV2AnomalyDetector,
+                ResilientAnomalyDetector,
+            )
+            return ResilientAnomalyDetector(DinoV2AnomalyDetector(heuristic=base), base)
+        except Exception as e:  # noqa: BLE001 — never let backend selection break startup
+            logger.warning("dinov2 backend unavailable (%s); using OpenCV anomaly detector", e)
+    return base
 
 
 @dataclass
@@ -101,7 +123,7 @@ class PipelineOrchestrator:
         health_card_assembler: HealthCardAssembler | None = None,
         anomaly_threshold: float = DEFAULT_ANOMALY_THRESHOLD,
     ) -> None:
-        self._anomaly_detector = anomaly_detector or AnomalyDetector()
+        self._anomaly_detector = anomaly_detector or _build_anomaly_detector()
         self._wear_detector = wear_detector or WearDetector()
         self._intent_classifier = intent_classifier or IntentClassifier()
         self._fraud_scanner = fraud_scanner or FraudScanner()

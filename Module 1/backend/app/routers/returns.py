@@ -12,6 +12,7 @@ Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.7, 2.8, 3.4, 5.1, 5.2, 12.1
 import json
 import logging
 import os
+import base64
 import uuid
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
@@ -117,10 +118,13 @@ def _mock_get_order(
 def _resolve_images(uris: list[str]) -> tuple[list[np.ndarray], int]:
     """Decode submitted media URIs into image arrays for the grader.
 
-    Demo-grade media resolution (Fix 2): a URI that points to an existing local
-    file (optionally ``file://``-prefixed) is decoded with OpenCV so the wear /
-    anomaly CV layers see real pixels. URIs that don't resolve to a local file
-    (e.g. ``s3://...`` in tests/demo) fall back to a neutral placeholder.
+    Resolves three URI forms so the wear / anomaly CV layers see real pixels:
+      * ``data:image/...;base64,...`` — inline image uploaded by the web app
+        (decoded via ``cv2.imdecode``).
+      * a local file path (optionally ``file://``-prefixed) — decoded with
+        ``cv2.imread``.
+      * anything else (e.g. ``s3://...`` in tests/demo) — falls back to a neutral
+        placeholder.
 
     Returns ``(image_arrays, real_count)`` where ``real_count`` is how many URIs
     resolved to genuine decoded images (0 means everything was a placeholder).
@@ -129,11 +133,19 @@ def _resolve_images(uris: list[str]) -> tuple[list[np.ndarray], int]:
     real_count = 0
     placeholder = np.zeros((224, 224, 3), dtype=np.uint8)
     for uri in uris:
-        path = uri[7:] if uri.startswith("file://") else uri
         decoded = None
         try:
-            if path and os.path.exists(path):
-                decoded = cv2.imread(path)
+            if uri.startswith("data:"):
+                # Inline base64 image (data:image/jpeg;base64,...) — uploaded by the
+                # web app so the CV graders see the customer's real pixels.
+                b64 = uri.split(",", 1)[1] if "," in uri else ""
+                if b64:
+                    buf = np.frombuffer(base64.b64decode(b64), dtype=np.uint8)
+                    decoded = cv2.imdecode(buf, cv2.IMREAD_COLOR)
+            else:
+                path = uri[7:] if uri.startswith("file://") else uri
+                if path and os.path.exists(path):
+                    decoded = cv2.imread(path)
         except Exception:  # noqa: BLE001 — never let media decode crash grading
             decoded = None
         if decoded is not None and getattr(decoded, "size", 0) > 0:
