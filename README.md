@@ -15,7 +15,7 @@
 
 | Criterion                     | How we address it                                                                             |
 | ----------------------------- | --------------------------------------------------------------------------------------------- |
-| **Quality of Presentation**   | Persona Story (Rahul), live Green Coin ticker, Health Card visual, market-state demo moment   |
+| **Quality of Presentation**   | Persona Story (Priya), live Green Coin ticker, Health Card visual, market-state demo moment   |
 | **Quality of Implementation** | 5 working FastAPI services + React frontends; 600+ tests green across all modules             |
 | **Technical Architecture**    | Async pipelines, event-sourced ledger, append-only contracts, graceful degradation throughout |
 | **Futuristic Vision**         | EU DPP readiness, India GCP integration, LinUCB bandit, multimodal pricing, real LCA data     |
